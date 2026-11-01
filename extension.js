@@ -85,6 +85,7 @@ function ensurePanel(context) {
   panel.webview.onDidReceiveMessage((message) => {
     if (message.type === 'ready' && pendingPayload) panel.webview.postMessage({ type: 'data', payload: pendingPayload })
     if (message.type === 'line') setHighlight(message.line)
+    if (message.type === 'settings') context.globalState.update('settings', message.settings)
   })
   panel.onDidDispose(() => {
     setHighlight(null)
@@ -122,6 +123,7 @@ async function inspect(context, uriString, start) {
     fnLine: instrumented.target.line,
     params: instrumented.target.params,
     fileName: path.basename(document.uri.fsPath),
+    settings: context.globalState.get('settings') || {},
     ...result,
   }
   const target = ensurePanel(context)

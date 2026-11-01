@@ -449,6 +449,7 @@ function selectRoot(index) {
 function load(data) {
   pause()
   state.data = data
+  applySettings(data.settings || {})
   state.roots = findRoots(data.events)
   elements.empty.hidden = true
   elements.app.hidden = false
@@ -480,13 +481,32 @@ function load(data) {
 function applyVisibility() {
   elements.explain.hidden = !elements.showExplain.checked
   elements.returns.hidden = !elements.showReturns.checked
-  vscode.setState({ showExplain: elements.showExplain.checked, showReturns: elements.showReturns.checked })
 }
 
-const saved = vscode.getState() || {}
-elements.showExplain.checked = Boolean(saved.showExplain)
-elements.showReturns.checked = Boolean(saved.showReturns)
+function saveSettings() {
+  vscode.postMessage({
+    type: 'settings',
+    settings: {
+      mode: elements.modeSelect.value,
+      speed: elements.speedSelect.value,
+      showExplain: elements.showExplain.checked,
+      showReturns: elements.showReturns.checked,
+    },
+  })
+}
+
+function applySettings(settings) {
+  if (settings.mode) elements.modeSelect.value = settings.mode
+  if (settings.speed) elements.speedSelect.value = settings.speed
+  elements.showExplain.checked = Boolean(settings.showExplain)
+  elements.showReturns.checked = Boolean(settings.showReturns)
+  applyVisibility()
+}
+
 applyVisibility()
+for (const control of [elements.showExplain, elements.showReturns, elements.modeSelect, elements.speedSelect]) {
+  control.addEventListener('change', saveSettings)
+}
 elements.showExplain.addEventListener('change', applyVisibility)
 elements.showReturns.addEventListener('change', applyVisibility)
 
