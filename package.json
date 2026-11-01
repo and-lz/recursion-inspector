@@ -1,0 +1,41 @@
+{
+  "name": "recursion-inspector",
+  "displayName": "Recursion Inspector",
+  "description": "Visualiza passo a passo a execução de funções recursivas em JavaScript.",
+  "version": "0.1.0",
+  "publisher": "andre",
+  "private": true,
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "main": "./extension.js",
+  "activationEvents": [
+    "onLanguage:javascript"
+  ],
+  "contributes": {
+    "configuration": {
+      "title": "Recursion Inspector",
+      "properties": {
+        "recursionInspector.layout": {
+          "type": "string",
+          "enum": ["fullscreen", "beside"],
+          "default": "fullscreen",
+          "description": "fullscreen: painel ocupa todo o editor (sidebar escondida). beside: painel ao lado do código, com a linha atual destacada."
+        }
+      }
+    },
+    "commands": [
+      {
+        "command": "recursionInspector.inspect",
+        "title": "Recursion Inspector: Inspecionar função recursiva"
+      }
+    ]
+  },
+  "scripts": {
+    "test": "node test/run-tests.js"
+  },
+  "dependencies": {
+    "acorn": "^8.19.0",
+    "acorn-walk": "^8.3.5"
+  }
+}

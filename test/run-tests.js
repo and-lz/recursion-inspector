@@ -1,0 +1,83 @@
+const assert = require('assert')
+const fs = require('fs')
+const vm = require('vm')
+const { findRecursiveFunctions } = require('../src/detect')
+const { instrument } = require('../src/instrument')
+const { runTrace } = require('../src/run')
+
+const sameTreePath = '/Users/andre/workspace/LeetCode/tree/100-same-tree/attempt01-11.js'
+
+const fibSource = `
+function fib(n) {
+  if (n < 2) return n
+  return fib(n - 1) + fib(n - 2)
+}
+const iterative = (n) => { return n + 1 }
+const sum = (items, index = 0) => index === items.length ? 0 : items[index] + sum(items, index + 1)
+function outer(n) {
+  function inner(k) {
+    if (k === 0) return 0
+    return inner(k - 1) + 1
+  }
+  return inner(n)
+}
+console.log(fib(5), sum([1, 2, 3]), outer(3))
+`
+
+async function main() {
+  const found = findRecursiveFunctions(fibSource)
+  assert.deepStrictEqual(
+    found.map((fn) => fn.name),
+    ['fib', 'sum', 'inner'],
+  )
+
+  for (const fn of found) {
+    const { code } = instrument(fibSource, fn.start)
+    assert.strictEqual(code.split('\n').length, fibSource.split('\n').length, 'linhas preservadas')
+    const result = await runTrace(code)
+    assert.strictEqual(result.error, null, `${fn.name}: ${result.error}`)
+    assert.deepStrictEqual(result.stdout, ['5 6 3'], `${fn.name}: saída igual à original`)
+    const calls = result.events.filter((event) => event.t === 'c')
+    const returns = result.events.filter((event) => event.t === 'r')
+    assert.strictEqual(calls.length, returns.length)
+  }
+
+  const fib = found[0]
+  const fibTrace = await runTrace(instrument(fibSource, fib.start).code)
+  assert.strictEqual(fibTrace.events.filter((event) => event.t === 'c').length, 15)
+  const rootReturn = fibTrace.events.find((event) => event.t === 'r' && event.id === 0)
+  assert.strictEqual(rootReturn.v.s, '5')
+  assert.strictEqual(fibTrace.events[1].line, 4, 'linha da chamada recursiva')
+
+  const bigSource = fibSource.replace('fib(5)', 'fib(25)')
+  const bigTrace = await runTrace(instrument(bigSource, fib.start).code)
+  assert.ok(bigTrace.truncated, 'trunca no limite de eventos')
+  assert.ok(bigTrace.events.length >= 20000 && bigTrace.events.length < 20100)
+  assert.deepStrictEqual(bigTrace.stdout, ['75025 6 3'], 'programa segue correto após truncar')
+
+  const overflowSource = 'function loop(n) { return n === 0 ? 0 : loop(n - 1) }\nloop(1e9)'
+  const overflowFn = findRecursiveFunctions(overflowSource)[0]
+  const overflowTrace = await runTrace(instrument(overflowSource, overflowFn.start).code)
+  assert.ok(overflowTrace.error, 'estouro de pilha reportado')
+  assert.ok(overflowTrace.events.some((event) => event.t === 't'), 'throw registrado')
+
+  if (fs.existsSync(sameTreePath)) {
+    const sameTree = fs.readFileSync(sameTreePath, 'utf8')
+    const sameFns = findRecursiveFunctions(sameTree)
+    assert.deepStrictEqual(
+      sameFns.map((fn) => fn.name),
+      ['isSameTree'],
+    )
+    assert.strictEqual(sameFns[0].line, 42)
+    const traced = await runTrace(instrument(sameTree, sameFns[0].start).code)
+    assert.strictEqual(traced.error, null)
+    assert.ok(traced.events.length > 0)
+  }
+
+  console.log('OK')
+}
+
+main().catch((error) => {
+  console.error(error)
+  process.exit(1)
+})

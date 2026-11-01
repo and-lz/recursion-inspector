@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'none'; style-src {{cspSource}}; script-src 'nonce-{{nonce}}';"
+    />
+    <link rel="stylesheet" href="{{css}}" />
+  </head>
+  <body>
+    <div id="empty">Carregando…</div>
+    <div id="app" hidden>
+      <header>
+        <h1 id="title"></h1>
+        <button id="menuButton" title="Opções" aria-label="Opções">☰</button>
+        <div id="menu" hidden>
+        <label>Execução: <select id="rootSelect"></select></label>
+        <label>Modo:
+          <select id="modeSelect">
+            <option value="explained">Explicado (devagar)</option>
+            <option value="compact">Compacto (rápido)</option>
+          </select>
+        </label>
+        <label>Velocidade:
+          <select id="speedSelect">
+            <option value="0.25">0.25x</option>
+            <option value="0.5">0.5x</option>
+            <option value="1" selected>1x</option>
+            <option value="2">2x</option>
+            <option value="4">4x</option>
+          </select>
+        </label>
+        <label><input type="checkbox" id="showExplain" /> Explicação</label>
+        <label><input type="checkbox" id="showReturns" /> Faixa de retornos</label>
+        </div>
+      </header>
+      <section id="explain" hidden>
+        <div id="explainText"></div>
+        <div id="summary"></div>
+      </section>
+      <section id="returns" hidden>
+        <span class="label">Retornos (mais recente primeiro):</span>
+        <div id="returnChips"></div>
+      </section>
+      <div id="legend">
+        <span class="chip active">chamando agora</span>
+        <span class="chip waiting">esperando os filhos</span>
+        <span class="chip done">já retornou</span>
+        <span class="chip base">caso base (não chamou ninguém)</span>
+        <span class="chip error">erro</span>
+      </div>
+      <main>
+        <div id="treeWrap"><svg id="tree"></svg></div>
+        <aside>
+          <h2>Pilha de chamadas <small>(topo = quem está executando)</small></h2>
+          <div id="stack"></div>
+          <h2>Variáveis desta chamada</h2>
+          <div id="vars"></div>
+          <h2>Linha do tempo</h2>
+          <div id="log"></div>
+        </aside>
+      </main>
+      <footer>
+        <button id="first" title="Início">⏮</button>
+        <button id="prev" title="Passo anterior (←)">◀</button>
+        <button id="play" title="Play/Pause (espaço)">▶ Play</button>
+        <button id="next" title="Próximo passo (→)">▶|</button>
+        <button id="last" title="Fim">⏭</button>
+        <input id="slider" type="range" min="0" max="0" value="0" />
+        <span id="counter"></span>
+      </footer>
+    </div>
+    <script nonce="{{nonce}}" src="{{js}}"></script>
+  </body>
+</html>
