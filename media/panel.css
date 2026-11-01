@@ -122,4 +122,4 @@ header { position: relative; justify-content: space-between; flex-wrap: nowrap; 
 
 .fnChip { font-family: var(--vscode-editor-font-family); padding: 1px 8px; border-radius: 10px; margin-left: 4px; color: #fff; }
 
-.node rect.tag { stroke: none; rx: 3; stroke-dasharray: none; }
+.node circle.tag { stroke: none; }
