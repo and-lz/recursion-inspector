@@ -2,6 +2,7 @@ const vscode = acquireVsCodeApi()
 
 const NODE_WIDTH_CHAR = 6.8
 const NODE_HEIGHT = 40
+const COMPACT_HEIGHT = 28
 const LEVEL_GAP = 40
 const SLOT_GAP = 14
 const MARGIN = 20
@@ -122,7 +123,7 @@ function renderFunctionLegend(trace) {
   for (const name of used) {
     const chip = document.createElement('span')
     chip.className = 'fnChip'
-    chip.style.background = functionColor(name)
+    chip.style.setProperty('--dot', functionColor(name))
     chip.textContent = name
     elements.fnLegend.append(chip)
   }
@@ -167,12 +168,14 @@ function buildTree(trace) {
   tree.append(edgeLayer, nodeLayer, valueLayer)
 
   for (const node of order) {
+    node.isBase = node.children.length === 0
+    node.height = node.kind === 'throw' ? NODE_HEIGHT : COMPACT_HEIGHT
     node.element = svg('g', { class: 'node hidden', transform: `translate(${node.x},${node.y})` })
-    node.element.append(svg('rect', { width: nodeWidth, height: NODE_HEIGHT }))
-    const tag = svg('circle', { class: 'tag', r: 4, cx: 12, cy: 12 })
+    node.element.append(svg('rect', { width: nodeWidth, height: node.height }))
+    const tag = svg('circle', { class: 'tag', r: 4, cx: 12, cy: node.height === NODE_HEIGHT ? 12 : 14 })
     tag.style.fill = functionColor(node.fn)
     node.element.append(tag)
-    const label = svg('text', { x: 22, y: 16 })
+    const label = svg('text', { x: 22, y: node.height === NODE_HEIGHT ? 16 : 18 })
     label.textContent = shorten(callText(node, 's'), MAX_LABEL)
     node.retText = svg('text', { x: 22, y: 31, class: 'ret' })
     const title = svg('title')
@@ -181,7 +184,6 @@ function buildTree(trace) {
     node.element.addEventListener('click', () => goTo(node.callIndex + 1, true))
     nodeLayer.append(node.element)
     node.className = 'node hidden'
-    node.isBase = node.children.length === 0
 
     if (!node.parent) {
       node.edgeValue = svg('text', {
@@ -195,7 +197,7 @@ function buildTree(trace) {
       continue
     }
     const startX = node.parent.x + nodeWidth / 2
-    const startY = node.parent.y + NODE_HEIGHT
+    const startY = node.parent.y + node.parent.height
     const endX = node.x + nodeWidth / 2
     const middleY = (startY + node.y) / 2
     node.edge = svg('path', { class: 'edge hidden', d: `M${startX},${startY} C${startX},${middleY} ${endX},${middleY} ${endX},${node.y}` })
@@ -227,9 +229,8 @@ function nodeState(node, step, lastEvent) {
 
 function returnText(node, stateName) {
   if (stateName === 'hidden' || stateName === 'active' || stateName === 'waiting') return ''
-  const prefix = node.isBase ? '🛑 ' : ''
-  if (node.kind === 'throw') return `${prefix}✖ ${shorten(node.message, 22)}`
-  return `${prefix}↩ ${shorten(node.value.s, 24)}`
+  if (node.kind !== 'throw') return ''
+  return `✖ ${shorten(node.message, 22)}`
 }
 
 function updateEdgeValue(node, stateName) {
@@ -303,7 +304,7 @@ function narrate(step) {
   const followUp = hasNext ? ` Em seguida ${parentCall} faz a ${ordinal(node.parent.children.length)} chamada recursiva.` : ''
 
   if (node.children.length === 0) {
-    return `<b>🛑 Caso base.</b> ${call} não precisou chamar ninguém e ${destination}.${followUp}`
+    return `<b>Caso base.</b> ${call} não precisou chamar ninguém e ${destination}.${followUp}`
   }
   const parts = node.children.map((child) => child.value && child.kind === 'return' ? child.value.s : '✖').join(', ')
   return `<b>Voltando.</b> Todas as ${node.children.length} chamadas filhas de ${call} terminaram (resultados: ${code(parts)}). Combinando, ela ${destination}.${followUp}`
@@ -318,7 +319,7 @@ function renderSummary(step) {
   const root = trace.rootNode
   const result = root.kind === 'return' ? code(root.value.f) : `erro ${code(root.message)}`
   const truncated = state.data.truncated ? ' ⚠ trace truncado (muitas chamadas): a árvore mostra só o início.' : ''
-  elements.summary.innerHTML = `🏁 <b>Fim.</b> ${trace.total} chamadas · profundidade máxima ${trace.maxDepth} · resultado ${result}.${truncated}`
+  elements.summary.innerHTML = `✓ <b>Fim.</b> ${trace.total} chamadas · profundidade máxima ${trace.maxDepth} · resultado ${result}.${truncated}`
 }
 
 /* ---------- painéis laterais ---------- */
@@ -335,7 +336,7 @@ function renderReturns(step) {
     const failed = event.t === 't'
     chip.className = `retChip${failed ? ' error' : ''}${node.isBase ? ' base' : ''}${chips.length === 0 ? ' latest' : ''}`
     const outcome = failed ? `✖ ${shorten(event.msg, 30)}` : event.v.s
-    chip.innerHTML = `${node.isBase ? '🛑 ' : ''}${escapeHtml(shorten(callText(node, 's'), 36))} → <b>${escapeHtml(outcome)}</b>`
+    chip.innerHTML = `${escapeHtml(shorten(callText(node, 's'), 36))} → <b>${escapeHtml(outcome)}</b>`
     chip.title = failed ? event.msg : `${callText(node, 'f')} retornou ${event.v.f}`
     chip.addEventListener('click', () => goTo(index + 1, true))
     chips.push(chip)

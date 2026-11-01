@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "npx --yes @vscode/vsce package --allow-missing-repository --skip-license -o recursion-inspector.vsix >/dev/null 2>&1 && \"/Applications/Visual Studio Code.app/Contents/Resources/app/bin/code\" --install-extension recursion-inspector.vsix --force >/dev/null 2>&1 || true",
+            "timeout": 120,
+            "statusMessage": "Empacotando e instalando extensão..."
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -9,6 +9,7 @@ let panel = null
 let pendingPayload = null
 let inspectedUri = null
 let highlight = null
+let maximized = false
 
 class RecursionLensProvider {
   provideCodeLenses(document) {
@@ -59,12 +60,24 @@ function isFullscreen() {
   return vscode.workspace.getConfiguration('recursionInspector').get('layout') === 'fullscreen'
 }
 
+async function maximizeEditor() {
+  if (maximized) return
+  maximized = true
+  await vscode.commands.executeCommand('workbench.action.maximizeEditorHideSidebar')
+}
+
+function restoreEditor() {
+  if (!maximized) return
+  maximized = false
+  vscode.commands.executeCommand('workbench.action.toggleMaximizeEditorGroup')
+}
+
 function ensurePanel(context) {
   const fullscreen = isFullscreen()
   const column = fullscreen ? vscode.ViewColumn.Active : vscode.ViewColumn.Beside
   if (panel) {
     panel.reveal(column, !fullscreen)
-    if (fullscreen) vscode.commands.executeCommand('workbench.action.maximizeEditorHideSidebar')
+    if (fullscreen) maximizeEditor()
     return panel
   }
 
@@ -80,7 +93,7 @@ function ensurePanel(context) {
     borderStyle: 'solid',
     borderWidth: '0 0 0 3px',
   })
-  if (fullscreen) vscode.commands.executeCommand('workbench.action.maximizeEditorHideSidebar')
+  if (fullscreen) maximizeEditor()
   panel.webview.html = buildHtml(panel.webview, context.extensionPath)
   panel.webview.onDidReceiveMessage((message) => {
     if (message.type === 'ready' && pendingPayload) panel.webview.postMessage({ type: 'data', payload: pendingPayload })
@@ -92,6 +105,7 @@ function ensurePanel(context) {
     highlight.dispose()
     highlight = null
     panel = null
+    restoreEditor()
   })
   return panel
 }
