@@ -145,7 +145,7 @@ function layout(trace) {
   }
 
   const longest = order.reduce((max, node) => Math.max(max, callText(node, 's').length), 10)
-  const nodeWidth = Math.min(longest, MAX_LABEL) * NODE_WIDTH_CHAR + 26
+  const nodeWidth = Math.min(longest, MAX_LABEL) * NODE_WIDTH_CHAR + 32
   const slotWidth = nodeWidth + SLOT_GAP
   for (const node of order) {
     node.x = MARGIN + node.slot * slotWidth
@@ -169,10 +169,12 @@ function buildTree(trace) {
   for (const node of order) {
     node.element = svg('g', { class: 'node hidden', transform: `translate(${node.x},${node.y})` })
     node.element.append(svg('rect', { width: nodeWidth, height: NODE_HEIGHT }))
-    node.element.append(svg('rect', { width: 5, height: NODE_HEIGHT - 8, x: 4, y: 4, rx: 2, fill: functionColor(node.fn) }))
-    const label = svg('text', { x: 14, y: 16 })
+    const tag = svg('rect', { class: 'tag', width: 8, height: NODE_HEIGHT - 12, x: 6, y: 6 })
+    tag.style.fill = functionColor(node.fn)
+    node.element.append(tag)
+    const label = svg('text', { x: 20, y: 16 })
     label.textContent = shorten(callText(node, 's'), MAX_LABEL)
-    node.retText = svg('text', { x: 14, y: 31, class: 'ret' })
+    node.retText = svg('text', { x: 20, y: 31, class: 'ret' })
     const title = svg('title')
     title.textContent = callText(node, 'f')
     node.element.append(label, node.retText, title)
