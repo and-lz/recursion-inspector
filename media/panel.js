@@ -11,7 +11,7 @@ const DELAY_MS = { explained: 1400, compact: 250 }
 
 const elements = {}
 for (const id of [
-  'empty', 'app', 'menu', 'menuButton', 'showExplain', 'showReturns', 'explain', 'returns', 'title', 'rootSelect', 'modeSelect', 'speedSelect', 'explainText', 'summary', 'tree', 'treeWrap',
+  'empty', 'app', 'menu', 'menuButton', 'showExplain', 'showReturns', 'showSidebar', 'sidebar', 'explain', 'returns', 'title', 'rootSelect', 'modeSelect', 'speedSelect', 'explainText', 'summary', 'tree', 'treeWrap',
   'returnChips', 'stack', 'vars', 'log', 'first', 'prev', 'play', 'next', 'last', 'slider', 'counter',
 ]) {
   elements[id] = document.getElementById(id)
@@ -481,6 +481,7 @@ function load(data) {
 function applyVisibility() {
   elements.explain.hidden = !elements.showExplain.checked
   elements.returns.hidden = !elements.showReturns.checked
+  elements.sidebar.hidden = !elements.showSidebar.checked
 }
 
 function saveSettings() {
@@ -491,6 +492,7 @@ function saveSettings() {
       speed: elements.speedSelect.value,
       showExplain: elements.showExplain.checked,
       showReturns: elements.showReturns.checked,
+      showSidebar: elements.showSidebar.checked,
     },
   })
 }
@@ -500,15 +502,17 @@ function applySettings(settings) {
   if (settings.speed) elements.speedSelect.value = settings.speed
   elements.showExplain.checked = Boolean(settings.showExplain)
   elements.showReturns.checked = Boolean(settings.showReturns)
+  elements.showSidebar.checked = settings.showSidebar !== false
   applyVisibility()
 }
 
 applyVisibility()
-for (const control of [elements.showExplain, elements.showReturns, elements.modeSelect, elements.speedSelect]) {
+for (const control of [elements.showExplain, elements.showReturns, elements.showSidebar, elements.modeSelect, elements.speedSelect]) {
   control.addEventListener('change', saveSettings)
 }
 elements.showExplain.addEventListener('change', applyVisibility)
 elements.showReturns.addEventListener('change', applyVisibility)
+elements.showSidebar.addEventListener('change', applyVisibility)
 
 elements.menuButton.addEventListener('click', (event) => {
   event.stopPropagation()

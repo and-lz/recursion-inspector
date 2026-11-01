@@ -33,6 +33,7 @@
         </label>
         <label><input type="checkbox" id="showExplain" /> Explicação</label>
         <label><input type="checkbox" id="showReturns" /> Faixa de retornos</label>
+        <label><input type="checkbox" id="showSidebar" checked /> Painel lateral</label>
         </div>
       </header>
       <section id="explain" hidden>
@@ -52,7 +53,7 @@
       </div>
       <main>
         <div id="treeWrap"><svg id="tree"></svg></div>
-        <aside>
+        <aside id="sidebar">
           <h2>Pilha de chamadas <small>(topo = quem está executando)</small></h2>
           <div id="stack"></div>
           <h2>Variáveis desta chamada</h2>
