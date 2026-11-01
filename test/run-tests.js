@@ -44,7 +44,7 @@ async function main() {
 
   const fib = found[0]
   const fibTrace = await runTrace(instrument(fibSource, fib.start).code)
-  assert.strictEqual(fibTrace.events.filter((event) => event.t === 'c').length, 15)
+  assert.strictEqual(fibTrace.events.filter((event) => event.t === 'c' && event.fn === 'fib').length, 15)
   const rootReturn = fibTrace.events.find((event) => event.t === 'r' && event.id === 0)
   assert.strictEqual(rootReturn.v.s, '5')
   assert.strictEqual(fibTrace.events[1].line, 4, 'linha da chamada recursiva')
@@ -73,6 +73,22 @@ async function main() {
     assert.strictEqual(traced.error, null)
     assert.ok(traced.events.length > 0)
   }
+
+  const mutualSource = `function isEven(n) { return n === 0 ? true : isOdd(n - 1) }
+function isOdd(n) { return n === 0 ? false : isEven(n - 1) }
+function same(a, b) { return a === null && b === null ? true : a === null || b === null ? false : same(a.l, b.l) && same(a.r, b.r) }
+function contains(root, sub) { return root === null ? false : same(root, sub) || contains(root.l, sub) || contains(root.r, sub) }
+console.log(isEven(4), contains({ l: null, r: { l: null, r: null } }, { l: null, r: null }))`
+  const mutual = findRecursiveFunctions(mutualSource)
+  assert.deepStrictEqual(
+    mutual.map((fn) => fn.name),
+    ['isEven', 'isOdd', 'same', 'contains'],
+  )
+  const contains = mutual.find((fn) => fn.name === 'contains')
+  const mutualTrace = await runTrace(instrument(mutualSource, contains.start).code)
+  assert.strictEqual(mutualTrace.error, null)
+  assert.deepStrictEqual(mutualTrace.stdout, ['true true'])
+  assert.ok(mutualTrace.events.some((event) => event.t === 'c' && event.fn === 'same'), 'chamadas de same registradas')
 
   console.log('OK')
 }

@@ -1,27 +1,32 @@
 const { findRecursiveFunctions } = require('./detect')
 
-// Troca a função original por um wrapper que registra entrada/saída.
-// Só insere texto na mesma linha, então os números de linha não mudam.
+function wrapperFor(fn) {
+  const originalName = `__orig_${fn.name}`
+  const meta = JSON.stringify({ name: fn.name, line: fn.line, params: fn.params })
+  const wrapperBody = `(...__args) { return __call(${meta}, __args, this, ${originalName}) }`
+  return fn.kind === 'declaration'
+    ? `;function ${fn.name}${wrapperBody};`
+    : `;${fn.declKeyword} ${fn.name} = function${wrapperBody};`
+}
+
+// Troca cada função recursiva do arquivo (a clicada e as que ela chama em ciclo)
+// por um wrapper que registra entrada/saída. Só insere texto na mesma linha,
+// então os números de linha não mudam.
 function instrument(source, start) {
-  const target = findRecursiveFunctions(source).find((fn) => fn.start === start)
+  const functions = findRecursiveFunctions(source)
+  const target = functions.find((fn) => fn.start === start)
   if (!target) throw new Error('Função recursiva não encontrada (o arquivo mudou?).')
 
-  const originalName = `__orig_${target.name}`
-  const meta = JSON.stringify({ name: target.name, line: target.line, params: target.params })
-  const wrapperBody = `(...__args) { return __call(${meta}, __args, this, ${originalName}) }`
-  const wrapper =
-    target.kind === 'declaration'
-      ? `;function ${target.name}${wrapperBody};`
-      : `;${target.declKeyword} ${target.name} = function${wrapperBody};`
+  const edits = functions.flatMap((fn) => [
+    { from: fn.idStart, to: fn.idEnd, text: `__orig_${fn.name}` },
+    { from: fn.end, to: fn.end, text: wrapperFor(fn) },
+  ])
+  edits.sort((first, second) => second.from - first.from || second.to - first.to)
 
-  const code =
-    source.slice(0, target.idStart) +
-    originalName +
-    source.slice(target.idEnd, target.end) +
-    wrapper +
-    source.slice(target.end)
+  let code = source
+  for (const edit of edits) code = code.slice(0, edit.from) + edit.text + code.slice(edit.to)
 
-  return { code, target }
+  return { code, target, functions }
 }
 
 module.exports = { instrument }

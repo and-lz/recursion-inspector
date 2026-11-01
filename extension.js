@@ -122,6 +122,7 @@ async function inspect(context, uriString, start) {
     fnName: instrumented.target.name,
     fnLine: instrumented.target.line,
     params: instrumented.target.params,
+    functionParams: Object.fromEntries(instrumented.functions.map((fn) => [fn.name, fn.params])),
     fileName: path.basename(document.uri.fsPath),
     settings: context.globalState.get('settings') || {},
     ...result,

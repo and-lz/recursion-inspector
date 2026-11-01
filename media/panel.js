@@ -7,11 +7,12 @@ const SLOT_GAP = 14
 const MARGIN = 20
 const MAX_LABEL = 30
 const SVG_NS = 'http://www.w3.org/2000/svg'
+const FN_COLORS = ['#3b82f6', '#c084fc', '#f97316', '#14b8a6', '#ec4899', '#a3a3a3']
 const DELAY_MS = { explained: 1400, compact: 250 }
 
 const elements = {}
 for (const id of [
-  'empty', 'app', 'menu', 'menuButton', 'showExplain', 'showReturns', 'showSidebar', 'sidebar', 'explain', 'returns', 'title', 'rootSelect', 'modeSelect', 'speedSelect', 'explainText', 'summary', 'tree', 'treeWrap',
+  'empty', 'app', 'fnLegend', 'menu', 'menuButton', 'showExplain', 'showReturns', 'showSidebar', 'sidebar', 'explain', 'returns', 'title', 'rootSelect', 'modeSelect', 'speedSelect', 'explainText', 'summary', 'tree', 'treeWrap',
   'returnChips', 'stack', 'vars', 'log', 'first', 'prev', 'play', 'next', 'last', 'slider', 'counter',
 ]) {
   elements[id] = document.getElementById(id)
@@ -44,16 +45,33 @@ function shorten(text, max) {
 }
 
 function callText(node, field) {
-  return `${state.data.fnName}(${node.args.map((arg) => arg[field]).join(', ')})`
+  return `${node.fn}(${node.args.map((arg) => arg[field]).join(', ')})`
 }
 
 /* ---------- dados ---------- */
 
+// Raiz = chamada da função clicada que não está dentro de outra chamada dela mesma.
+// Chamadas de outras funções recursivas feitas lá dentro entram na mesma árvore.
 function findRoots(events) {
   const roots = []
+  const functionOf = new Map()
+  let openTargets = 0
+  let current = null
+
   events.forEach((event, index) => {
-    if (event.t === 'c' && event.parent === -1) roots.push({ startIndex: index, endIndex: events.length - 1, id: event.id })
-    if (event.t !== 'c' && roots.length && roots[roots.length - 1].id === event.id) roots[roots.length - 1].endIndex = index
+    if (event.t === 'c') {
+      functionOf.set(event.id, event.fn)
+      if (event.fn !== state.data.fnName) return
+      if (openTargets === 0) {
+        current = { startIndex: index, endIndex: events.length - 1, id: event.id }
+        roots.push(current)
+      }
+      openTargets++
+      return
+    }
+    if (functionOf.get(event.id) !== state.data.fnName) return
+    openTargets--
+    if (openTargets === 0) current.endIndex = index
   })
   return roots
 }
@@ -66,7 +84,7 @@ function buildTrace(root) {
   events.forEach((event, index) => {
     if (event.t === 'c') {
       const node = {
-        id: event.id, parent: event.parent === -1 ? null : nodes.get(event.parent), children: [], depth: event.depth - events[0].depth,
+        id: event.id, fn: event.fn, parent: nodes.get(event.parent) || null, children: [], depth: event.depth - events[0].depth,
         args: event.args, line: event.line, callIndex: index, endIndex: Infinity, kind: null, value: null, message: null,
       }
       if (node.parent) node.parent.children.push(node)
@@ -92,6 +110,24 @@ function svg(tag, attributes) {
   return element
 }
 
+function functionColor(name) {
+  const names = Object.keys(state.data.functionParams)
+  return FN_COLORS[names.indexOf(name) % FN_COLORS.length]
+}
+
+function renderFunctionLegend(trace) {
+  const used = [...new Set([...trace.nodes.values()].map((node) => node.fn))]
+  elements.fnLegend.replaceChildren()
+  if (used.length < 2) return
+  for (const name of used) {
+    const chip = document.createElement('span')
+    chip.className = 'fnChip'
+    chip.style.background = functionColor(name)
+    chip.textContent = name
+    elements.fnLegend.append(chip)
+  }
+}
+
 function layout(trace) {
   const order = []
   const pending = [trace.rootNode]
@@ -109,7 +145,7 @@ function layout(trace) {
   }
 
   const longest = order.reduce((max, node) => Math.max(max, callText(node, 's').length), 10)
-  const nodeWidth = Math.min(longest, MAX_LABEL) * NODE_WIDTH_CHAR + 20
+  const nodeWidth = Math.min(longest, MAX_LABEL) * NODE_WIDTH_CHAR + 26
   const slotWidth = nodeWidth + SLOT_GAP
   for (const node of order) {
     node.x = MARGIN + node.slot * slotWidth
@@ -133,9 +169,10 @@ function buildTree(trace) {
   for (const node of order) {
     node.element = svg('g', { class: 'node hidden', transform: `translate(${node.x},${node.y})` })
     node.element.append(svg('rect', { width: nodeWidth, height: NODE_HEIGHT }))
-    const label = svg('text', { x: 8, y: 16 })
+    node.element.append(svg('rect', { width: 5, height: NODE_HEIGHT - 8, x: 4, y: 4, rx: 2, fill: functionColor(node.fn) }))
+    const label = svg('text', { x: 14, y: 16 })
     label.textContent = shorten(callText(node, 's'), MAX_LABEL)
-    node.retText = svg('text', { x: 8, y: 31, class: 'ret' })
+    node.retText = svg('text', { x: 14, y: 31, class: 'ret' })
     const title = svg('title')
     title.textContent = callText(node, 'f')
     node.element.append(label, node.retText, title)
@@ -235,8 +272,7 @@ function renderTree(step) {
 
 function narrate(step) {
   const trace = state.trace
-  const name = state.data.fnName
-  if (step === 0) {
+    if (step === 0) {
     return `Aperte <b>▶ Play</b> ou arraste o slider. A primeira chamada é ${code(callText(trace.rootNode, 'f'))}: ninguém a chamou, é o ponto de partida.`
   }
 
@@ -248,6 +284,9 @@ function narrate(step) {
   if (event.t === 'c') {
     if (!node.parent) return `<b>Início.</b> ${call} é a chamada inicial (profundidade 0). Ela vai ficar <i>esperando</i> até todas as chamadas que ela fizer terminarem.`
     const position = node.parent.children.indexOf(node)
+    if (node.parent.fn !== node.fn) {
+      return `<b>Outra função recursiva.</b> ${parentCall} (${node.parent.fn}) chamou ${call} (${node.fn}). Uma nova recursão começa aqui dentro; as chamadas dela aparecem como filhas.`
+    }
     return `<b>Nova chamada.</b> ${parentCall} chamou ${call} — é a <b>${ordinal(position)} chamada recursiva</b> dela${
       node.line ? ` (linha ${node.line})` : ''
     }. Profundidade ${node.depth}: agora há ${node.depth + 1} chamadas empilhadas.`
@@ -335,7 +374,7 @@ function renderVars(focus, lastEvent) {
   const lines = []
   if (focus) {
     focus.args.forEach((arg, index) => {
-      const param = state.data.params[index] || `arg${index}`
+      const param = (state.data.functionParams[focus.fn] || [])[index] || `arg${index}`
       lines.push(`<div class="var"><b>${escapeHtml(param)}</b> = ${escapeHtml(arg.f)}</div>`)
     })
     if (lastEvent.t === 'r') lines.push(`<div class="var"><b>retorno</b> = ${escapeHtml(focus.value.f)}</div>`)
@@ -441,6 +480,7 @@ function selectRoot(index) {
   state.trace = trace
   state.step = 0
   buildTree(trace)
+  renderFunctionLegend(trace)
   buildLog(trace)
   elements.slider.max = trace.events.length
   render(0)
@@ -471,7 +511,7 @@ function load(data) {
     const result = last.t === 'r' ? last.v.s : last.t === 't' ? 'erro' : '…'
     const option = document.createElement('option')
     option.value = index
-    option.textContent = shorten(`#${index + 1}: ${data.fnName}(${first.args.map((arg) => arg.s).join(', ')}) → ${result}`, 60)
+    option.textContent = shorten(`#${index + 1}: ${first.fn}(${first.args.map((arg) => arg.s).join(', ')}) → ${result}`, 60)
     elements.rootSelect.append(option)
   })
   selectRoot(0)

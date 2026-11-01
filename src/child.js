@@ -74,6 +74,7 @@ function run(code) {
     const parent = stack.length ? stack[stack.length - 1] : -1
     events.push({
       t: 'c',
+      fn: meta.name,
       id,
       parent,
       depth: stack.length,

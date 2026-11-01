@@ -21,12 +21,7 @@ function fakeElement() {
   return element
 }
 
-async function main() {
-  const source = 'function fib(n) {\n  if (n < 2) return n\n  return fib(n - 1) + fib(n - 2)\n}\nfib(4)\nfib(1)'
-  const fn = findRecursiveFunctions(source)[0]
-  const result = await runTrace(instrument(source, fn.start).code)
-  const payload = { fnName: 'fib', fnLine: 1, params: fn.params, fileName: 'x.js', ...result }
-
+function loadPanel(payload) {
   const cache = {}
   const messages = []
   let onMessage
@@ -43,7 +38,17 @@ async function main() {
   }
   vm.runInNewContext(fs.readFileSync(__dirname + '/../media/panel.js', 'utf8'), sandbox)
   onMessage({ data: { type: 'data', payload } })
+  return cache
 
+}
+
+async function main() {
+  const source = 'function fib(n) {\n  if (n < 2) return n\n  return fib(n - 1) + fib(n - 2)\n}\nfib(4)\nfib(1)'
+  const fn = findRecursiveFunctions(source)[0]
+  const result = await runTrace(instrument(source, fn.start).code)
+  const payload = { fnName: 'fib', fnLine: 1, params: fn.params, functionParams: { fib: fn.params }, fileName: 'x.js', ...result }
+
+  const cache = loadPanel(payload)
   assert.strictEqual(cache.rootSelect.children.length, 2)
   assert.strictEqual(cache.slider.max, 18)
   cache.slider.value = '1'
@@ -57,6 +62,24 @@ async function main() {
   cache.slider.value = '5'
   cache.slider.listeners.input()
   assert.ok(cache.explainText.innerHTML.includes('Caso base'), cache.explainText.innerHTML)
+  const mutualSource = `function same(a, b) { return a === null && b === null ? true : a === null || b === null ? false : same(a.l, b.l) && same(a.r, b.r) }
+function contains(root, sub) { return root === null ? false : same(root, sub) || contains(root.l, sub) }
+same(null, null)
+contains({ l: { l: null, r: null }, r: null }, { l: null, r: null })`
+  const mutual = findRecursiveFunctions(mutualSource)
+  const contains = mutual.find((fn) => fn.name === 'contains')
+  const instrumented = instrument(mutualSource, contains.start)
+  const mutualResult = await runTrace(instrumented.code)
+  const mutualCache = loadPanel({
+    fnName: 'contains', fnLine: 2, params: contains.params, fileName: 'y.js',
+    functionParams: Object.fromEntries(instrumented.functions.map((fn) => [fn.name, fn.params])),
+    ...mutualResult,
+  })
+  assert.strictEqual(mutualCache.rootSelect.children.length, 1, 'só chamadas de contains são raiz')
+  mutualCache.slider.value = mutualCache.slider.max
+  mutualCache.slider.listeners.input()
+  assert.ok(mutualCache.summary.innerHTML.includes('chamadas'), mutualCache.summary.innerHTML)
+  assert.ok(mutualCache.fnLegend.children.length === 2, 'legenda com as duas funções')
   console.log('panel OK')
 }
 

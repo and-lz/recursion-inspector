@@ -20,14 +20,28 @@ function isPlainFunction(node) {
   return !node.async && !node.generator
 }
 
-function callsItself(fnNode, name) {
-  let found = false
+function calledNames(fnNode, names) {
+  const called = new Set()
   walk.simple(fnNode.body, {
     CallExpression(call) {
-      if (call.callee.type === 'Identifier' && call.callee.name === name) found = true
+      if (call.callee.type === 'Identifier' && names.has(call.callee.name)) called.add(call.callee.name)
     },
   })
-  return found
+  return called
+}
+
+// Uma função é recursiva se consegue chegar nela mesma seguindo chamadas (direta ou mútua).
+function reachesItself(name, graph) {
+  const visited = new Set()
+  const pending = [...graph.get(name)]
+  while (pending.length) {
+    const current = pending.pop()
+    if (current === name) return true
+    if (visited.has(current)) continue
+    visited.add(current)
+    pending.push(...graph.get(current))
+  }
+  return false
 }
 
 function paramLabel(source, param) {
@@ -54,13 +68,12 @@ function describe(source, name, fnNode, declNode, idNode, kind) {
 
 function findRecursiveFunctions(source) {
   const ast = parse(source)
-  const found = []
+  const candidates = []
 
   walk.simple(ast, {
     FunctionDeclaration(node) {
       if (!node.id || !isPlainFunction(node)) return
-      if (!callsItself(node, node.id.name)) return
-      found.push(describe(source, node.id.name, node, node, node.id, 'declaration'))
+      candidates.push({ fnNode: node, info: describe(source, node.id.name, node, node, node.id, 'declaration') })
     },
     VariableDeclaration(node) {
       if (node.declarations.length !== 1) return
@@ -68,12 +81,23 @@ function findRecursiveFunctions(source) {
       if (declaration.id.type !== 'Identifier') return
       if (!declaration.init || !isFunctionNode(declaration.init)) return
       if (!isPlainFunction(declaration.init)) return
-      if (!callsItself(declaration.init, declaration.id.name)) return
-      found.push(describe(source, declaration.id.name, declaration.init, node, declaration.id, 'variable'))
+      candidates.push({
+        fnNode: declaration.init,
+        info: describe(source, declaration.id.name, declaration.init, node, declaration.id, 'variable'),
+      })
     },
   })
 
-  return found.sort((first, second) => first.start - second.start)
+  const names = new Set(candidates.map((candidate) => candidate.info.name))
+  const graph = new Map([...names].map((name) => [name, new Set()]))
+  for (const candidate of candidates) {
+    for (const callee of calledNames(candidate.fnNode, names)) graph.get(candidate.info.name).add(callee)
+  }
+
+  return candidates
+    .map((candidate) => candidate.info)
+    .filter((info) => reachesItself(info.name, graph))
+    .sort((first, second) => first.start - second.start)
 }
 
 module.exports = { findRecursiveFunctions }
