@@ -7,12 +7,18 @@ const { findRecursiveFunctions } = require('../src/detect')
 const { instrument } = require('../src/instrument')
 const { runTrace } = require('../src/run')
 
-const PANEL_SCRIPTS = ['panel-state.js', 'panel-tree.js', 'panel-details.js', 'panel.js']
+const PANEL_SCRIPTS = [
+  'panel-state.js',
+  'panel-tree.js',
+  'panel-details.js',
+  'panel-tooltip.js',
+  'panel.js',
+]
 
 function fakeElement() {
   const element = {
     children: [],
-    style: {},
+    style: { setProperty() {} },
     classList: { toggle() {}, add() {}, remove() {} },
     listeners: {},
     attrs: {},
@@ -42,6 +48,7 @@ function fakeElement() {
 
 function loadPanel(payload) {
   const cache = {}
+  const svgElements = []
   const messages = []
   let onMessage
   const sandbox = {
@@ -53,10 +60,16 @@ function loadPanel(payload) {
     document: {
       getElementById: (id) => (cache[id] ||= fakeElement()),
       createElement: fakeElement,
-      createElementNS: fakeElement,
+      createElementNS: () => {
+        const element = fakeElement()
+        svgElements.push(element)
+        return element
+      },
       addEventListener() {},
     },
     window: {
+      innerWidth: 1000,
+      innerHeight: 800,
       addEventListener: (name, fn) => {
         onMessage = fn
       },
@@ -69,7 +82,58 @@ function loadPanel(payload) {
   ).join('\n')
   vm.runInNewContext(source, sandbox)
   onMessage({ data: { type: 'data', payload } })
+  cache.svgElements = svgElements
   return cache
+}
+
+async function testLocals() {
+  const source = `function total(n) {
+  if (n === 0) return 0
+  const rest = total(n - 1)
+  const sum = rest + n
+  return sum
+}
+total(2)`
+  const fn = findRecursiveFunctions(source)[0]
+  const result = await runTrace(instrument(source, fn.start).code)
+  const cache = loadPanel({
+    fnName: 'total',
+    fnLine: 1,
+    params: fn.params,
+    functionParams: { total: fn.params },
+    fileName: 'z.js',
+    ...result,
+  })
+  cache.slider.value = cache.slider.max
+  cache.slider.listeners.input()
+  assert.ok(cache.explainText.innerHTML.includes('rest = 1'), cache.explainText.innerHTML)
+  assert.ok(cache.vars.innerHTML.includes('sum'), cache.vars.innerHTML)
+}
+
+async function testMutual() {
+  const mutualSource = `function same(a, b) { return a === null && b === null ? true : a === null || b === null ? false : same(a.l, b.l) && same(a.r, b.r) }
+function contains(root, sub) { return root === null ? false : same(root, sub) || contains(root.l, sub) }
+same(null, null)
+contains({ l: { l: null, r: null }, r: null }, { l: null, r: null })`
+  const mutual = findRecursiveFunctions(mutualSource)
+  const contains = mutual.find((candidate) => candidate.name === 'contains')
+  const instrumented = instrument(mutualSource, contains.start)
+  const mutualResult = await runTrace(instrumented.code)
+  const mutualCache = loadPanel({
+    fnName: 'contains',
+    fnLine: 2,
+    params: contains.params,
+    fileName: 'y.js',
+    functionParams: Object.fromEntries(
+      instrumented.functions.map((entry) => [entry.name, entry.params]),
+    ),
+    ...mutualResult,
+  })
+  assert.strictEqual(mutualCache.rootSelect.children.length, 1, 'só chamadas de contains são raiz')
+  mutualCache.slider.value = mutualCache.slider.max
+  mutualCache.slider.listeners.input()
+  assert.ok(mutualCache.summary.innerHTML.includes('chamadas'), mutualCache.summary.innerHTML)
+  assert.ok(mutualCache.fnLegend.children.length === 2, 'legenda com as duas funções')
 }
 
 async function main() {
@@ -100,29 +164,18 @@ async function main() {
   cache.slider.value = '5'
   cache.slider.listeners.input()
   assert.ok(cache.explainText.innerHTML.includes('Caso base'), cache.explainText.innerHTML)
-  const mutualSource = `function same(a, b) { return a === null && b === null ? true : a === null || b === null ? false : same(a.l, b.l) && same(a.r, b.r) }
-function contains(root, sub) { return root === null ? false : same(root, sub) || contains(root.l, sub) }
-same(null, null)
-contains({ l: { l: null, r: null }, r: null }, { l: null, r: null })`
-  const mutual = findRecursiveFunctions(mutualSource)
-  const contains = mutual.find((candidate) => candidate.name === 'contains')
-  const instrumented = instrument(mutualSource, contains.start)
-  const mutualResult = await runTrace(instrumented.code)
-  const mutualCache = loadPanel({
-    fnName: 'contains',
-    fnLine: 2,
-    params: contains.params,
-    fileName: 'y.js',
-    functionParams: Object.fromEntries(
-      instrumented.functions.map((entry) => [entry.name, entry.params]),
-    ),
-    ...mutualResult,
-  })
-  assert.strictEqual(mutualCache.rootSelect.children.length, 1, 'só chamadas de contains são raiz')
-  mutualCache.slider.value = mutualCache.slider.max
-  mutualCache.slider.listeners.input()
-  assert.ok(mutualCache.summary.innerHTML.includes('chamadas'), mutualCache.summary.innerHTML)
-  assert.ok(mutualCache.fnLegend.children.length === 2, 'legenda com as duas funções')
+  assert.ok(cache.explainText.innerHTML.includes('n &lt; 2'), 'cita a condição do caso base')
+  assert.ok(cache.explainText.innerHTML.includes('n = 1'), 'cita o valor do parâmetro')
+  assert.ok(cache.vars.innerHTML.includes('teste'), cache.vars.innerHTML)
+  await testLocals()
+  const hoverable = cache.svgElements.filter((element) => element.listeners.mouseenter)
+  assert.ok(hoverable.length > 0, 'nós da árvore têm tooltip')
+  hoverable[0].listeners.mouseenter({ currentTarget: hoverable[0], clientX: 10, clientY: 10 })
+  assert.ok(cache.tooltip.innerHTML.includes('fib('), cache.tooltip.innerHTML)
+  assert.strictEqual(cache.tooltip.hidden, false)
+  hoverable[0].listeners.mouseleave()
+  assert.strictEqual(cache.tooltip.hidden, true)
+  await testMutual()
   console.log('panel OK')
 }
 

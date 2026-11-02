@@ -3,6 +3,7 @@ const util = require('util')
 
 const EVENT_LIMIT = 20000
 const TIME_LIMIT_MS = 5000
+const PROBE_LIMIT = 40000
 const STDOUT_LIMIT = 50
 const MAX_ITEMS = 8
 const MAX_DEPTH = 3
@@ -63,8 +64,47 @@ function callerLine(stack) {
   return Number(lines[1].match(/user-code\.js:(\d+):\d+/)[1])
 }
 
+// `where()` devolve a chamada em andamento (ou null quando não dá para registrar).
+// As funções devolvem o valor recebido: o programa do usuário não pode mudar de comportamento.
+function createProbeHooks(probes, where) {
+  function add(probe) {
+    const position = probes.length < PROBE_LIMIT && where()
+    if (position) probes.push({ ...probe(), ...position })
+  }
+
+  // `after` existe para i++, onde o valor novo só aparece depois da expressão.
+  function __var(name, line, value, ...after) {
+    add(() => ({ kind: 'var', name, line, v: snapshot(after.length ? after[0] : value) }))
+    return value
+  }
+
+  // Os operandos são avaliados antes do teste fechar: ficam pendentes por chamada e o
+  // `__cond` leva todos. Chamadas aninhadas no próprio teste têm fila separada.
+  const pending = new Map()
+
+  function __operand(src, line, value) {
+    const position = where()
+    if (!position) return value
+    const queue = pending.get(position.id) || []
+    queue.push({ src, v: snapshot(value) })
+    pending.set(position.id, queue)
+    return value
+  }
+
+  function __cond(src, line, value) {
+    const position = where()
+    const operands = (position && pending.get(position.id)) || []
+    if (position) pending.delete(position.id)
+    add(() => ({ kind: 'cond', src, line, result: Boolean(value), operands }))
+    return value
+  }
+
+  return { __var, __cond, __operand }
+}
+
 function run(code) {
   const events = []
+  const probes = []
   const stack = []
   const stdout = []
   let nextId = 0
@@ -102,11 +142,18 @@ function run(code) {
     }
   }
 
+  const { __var, __cond, __operand } = createProbeHooks(probes, () =>
+    truncated || stack.length === 0 ? null : { id: stack[stack.length - 1], at: events.length },
+  )
+
   const log = (...parts) => {
     if (stdout.length < STDOUT_LIMIT) stdout.push(util.format(...parts))
   }
   const sandbox = {
     __call,
+    __var,
+    __cond,
+    __operand,
     structuredClone,
     console: { log, info: log, warn: log, error: log, debug: log },
   }
@@ -118,7 +165,7 @@ function run(code) {
     error = String(caught && caught.message ? caught.message : caught)
   }
 
-  return { events, stdout, truncated, error }
+  return { events, probes, stdout, truncated, error }
 }
 
 process.on('message', (message) => {

@@ -10,8 +10,9 @@ function render(previousStep) {
   renderSummary(step)
   renderReturns(step)
   renderStack(focus, lastEvent)
-  renderVars(focus, lastEvent)
+  renderVars(focus, lastEvent, step)
   renderLog(previousStep, step)
+  refreshTooltip()
 
   elements.slider.value = step
   elements.counter.textContent = `passo ${step} / ${trace.events.length}`

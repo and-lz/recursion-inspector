@@ -5,6 +5,8 @@ const NODE_HEIGHT = 40
 const COMPACT_HEIGHT = 28
 const LEVEL_GAP = 40
 const SLOT_GAP = 14
+const EDGE_CHAR_WIDTH = 9
+const MIN_EDGE_CHARS = 4
 const MARGIN = 20
 const MAX_LABEL = 30
 const SVG_NS = 'http://www.w3.org/2000/svg'
@@ -36,6 +38,7 @@ for (const id of [
   'stack',
   'vars',
   'log',
+  'tooltip',
   'first',
   'prev',
   'play',
@@ -108,6 +111,53 @@ function findRoots(events) {
   return roots
 }
 
+// `at` das sondas é global (nº de eventos até então); vira relativo ao passo desta raiz.
+function attachProbes(nodes, startIndex) {
+  for (const probe of state.data.probes || []) {
+    const node = nodes.get(probe.id)
+    if (!node) continue
+    const at = probe.at - startIndex
+    if (probe.kind === 'var') node.locals.push({ name: probe.name, v: probe.v, at })
+    else
+      node.conds.push({
+        src: probe.src,
+        result: probe.result,
+        operands: probe.operands,
+        line: probe.line,
+        at,
+      })
+  }
+}
+
+function localsAt(node, step) {
+  const latest = new Map()
+  for (const local of node.locals) {
+    if (local.at > step) break
+    latest.set(local.name, local)
+  }
+  return [...latest.values()]
+}
+
+function condsAt(node, step) {
+  return node.conds.filter((cond) => cond.at <= step)
+}
+
+// Parâmetros e locais num mesmo passo; parâmetro reatribuído mostra o valor novo.
+function variablesAt(node, step) {
+  const params = state.data.functionParams[node.fn] || []
+  const variables = node.args.map((arg, index) => ({
+    name: params[index] || `arg${index}`,
+    value: arg.f,
+    isParam: true,
+  }))
+  for (const local of localsAt(node, step)) {
+    const existing = variables.find((variable) => variable.name === local.name)
+    if (existing) existing.value = local.v.f
+    else variables.push({ name: local.name, value: local.v.f, isParam: false })
+  }
+  return variables
+}
+
 function buildTrace(root) {
   const events = state.data.events.slice(root.startIndex, root.endIndex + 1)
   const nodes = new Map()
@@ -128,6 +178,8 @@ function buildTrace(root) {
         kind: null,
         value: null,
         message: null,
+        locals: [],
+        conds: [],
       }
       if (node.parent) node.parent.children.push(node)
       nodes.set(event.id, node)
@@ -140,6 +192,8 @@ function buildTrace(root) {
     node.value = event.v || null
     node.message = event.msg || null
   })
+
+  attachProbes(nodes, root.startIndex)
 
   return { events, nodes, rootNode: nodes.get(root.id), maxDepth, total: nodes.size }
 }

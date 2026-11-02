@@ -359,6 +359,7 @@ footer {
   }
 }
 #tree .edgeValue {
+  cursor: help;
   font-weight: bold;
   fill: var(--done);
   font-size: 12px;
@@ -369,6 +370,7 @@ footer {
 }
 #tree .edgeValue.hidden {
   opacity: 0;
+  pointer-events: none;
 }
 #tree .edgeValue.failed {
   fill: var(--error);
@@ -475,4 +477,47 @@ header {
 
 .node circle.tag {
   stroke: none;
+}
+#tooltip {
+  position: fixed;
+  z-index: 10;
+  max-width: 480px;
+  padding: 8px 10px;
+  border: 1px solid var(--vscode-editorHoverWidget-border, var(--border));
+  border-radius: var(--radius);
+  background: var(--vscode-editorHoverWidget-background, var(--vscode-editor-background));
+  color: var(--vscode-editorHoverWidget-foreground, var(--vscode-foreground));
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+  font-size: 12px;
+  pointer-events: none;
+}
+#tooltip[hidden] {
+  display: none;
+}
+#tooltip .tipValue {
+  margin: 4px 0 0;
+  max-height: 50vh;
+  overflow: hidden;
+  font-family: var(--vscode-editor-font-family);
+  white-space: pre;
+}
+#tooltip code {
+  font-family: var(--vscode-editor-font-family);
+  word-break: break-all;
+}
+.tipTitle {
+  font-weight: bold;
+  margin-bottom: 2px;
+}
+.tipMeta,
+.tipNote {
+  opacity: 0.7;
+  margin-bottom: 4px;
+}
+.tipNote {
+  margin-top: 4px;
+  margin-bottom: 0;
+}
+.var.cond {
+  opacity: 0.8;
 }

@@ -1,0 +1,121 @@
+/* ---------- tooltip de detalhes ---------- */
+
+const TOOLTIP_OFFSET = 14
+const TOOLTIP_MARGIN = 8
+
+const tooltip = { node: null, source: null, describe: null }
+
+function attachTooltip(element, node, describe = describeNode) {
+  element.addEventListener('mouseenter', (event) => showTooltip(node, describe, event))
+  element.addEventListener('mousemove', moveTooltip)
+  element.addEventListener('mouseleave', hideTooltip)
+}
+
+function showTooltip(node, describe, event) {
+  const html = describe(node, state.step)
+  if (!html) return
+  tooltip.node = node
+  tooltip.describe = describe
+  tooltip.source = event.currentTarget
+  elements.tooltip.innerHTML = html
+  elements.tooltip.hidden = false
+  moveTooltip(event)
+}
+
+function moveTooltip(event) {
+  const box = elements.tooltip
+  const maxLeft = window.innerWidth - box.offsetWidth - TOOLTIP_MARGIN
+  const maxTop = window.innerHeight - box.offsetHeight - TOOLTIP_MARGIN
+  const below = event.clientY + TOOLTIP_OFFSET
+  const top = below > maxTop ? event.clientY - TOOLTIP_OFFSET - box.offsetHeight : below
+  box.style.left = `${Math.max(TOOLTIP_MARGIN, Math.min(event.clientX + TOOLTIP_OFFSET, maxLeft))}px`
+  box.style.top = `${Math.max(TOOLTIP_MARGIN, top)}px`
+}
+
+function hideTooltip() {
+  tooltip.node = null
+  tooltip.source = null
+  tooltip.describe = null
+  elements.tooltip.hidden = true
+}
+
+// Durante o play o passo muda com o mouse parado: atualiza o conteúdo. Pilha e chips são
+// recriados a cada passo, então o elemento sob o mouse some sem disparar mouseleave.
+function refreshTooltip() {
+  if (!tooltip.node) return
+  if (tooltip.source.isConnected === false) {
+    hideTooltip()
+    return
+  }
+  const html = tooltip.describe(tooltip.node, state.step)
+  if (!html) {
+    hideTooltip()
+    return
+  }
+  elements.tooltip.innerHTML = html
+}
+
+const CLOSERS = { '[': ']', '{': '}' }
+
+function stringEnd(text, start) {
+  let index = start + 1
+  while (index < text.length && text[index] !== '"') index += text[index] === '\\' ? 2 : 1
+  return index + 1
+}
+
+// Devolve o texto de um caractere de pontuação, ajustando a pilha de aberturas.
+function punctuation(char, stack) {
+  const indent = () => `\n${'  '.repeat(stack.length)}`
+  if (CLOSERS[char]) {
+    stack.push(char)
+    return char + indent()
+  }
+  if (char === '(') {
+    stack.push(char)
+    return char
+  }
+  if (char === ')') {
+    stack.pop()
+    return char
+  }
+  if (char === ']' || char === '}') {
+    stack.pop()
+    return indent() + char
+  }
+  if (char === ',' && CLOSERS[stack[stack.length - 1]]) return char + indent()
+  return char
+}
+
+// O valor vem em uma linha só: quebra em cada vírgula dentro de [] e {} e indenta por nível.
+function prettify(text) {
+  const stack = []
+  let out = ''
+  let index = 0
+  while (index < text.length) {
+    const char = text[index]
+    if (char === '"') {
+      const end = stringEnd(text, index)
+      out += text.slice(index, end)
+      index = end
+      continue
+    }
+    index++
+    if (CLOSERS[char] && text[index] === CLOSERS[char]) {
+      out += char + text[index++]
+      continue
+    }
+    out += punctuation(char, stack)
+    if (char === ',' && text[index] === ' ') index++
+  }
+  return out
+}
+
+function describeEdgeValue(node, step) {
+  const lastEvent = step > 0 ? state.trace.events[step - 1] : null
+  const stateName = nodeState(node, step, lastEvent)
+  const title = `<div class="tipTitle">${code(callText(node, 'f'))}</div>`
+  if (stateName === 'error')
+    return `${title}<div class="var"><b>erro</b> ${escapeHtml(node.message)}</div>`
+  if (stateName !== 'done' && stateName !== 'returning') return ''
+  return `${title}<div class="tipMeta">retorno</div><pre class="tipValue">${escapeHtml(prettify(node.value.f))}</pre>`
+}

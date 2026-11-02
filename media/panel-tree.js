@@ -69,9 +69,8 @@ function buildNodeElement(node, nodeWidth, nodeLayer) {
   const label = svg('text', { x: 22, y: node.height === NODE_HEIGHT ? 16 : 18 })
   label.textContent = shorten(callText(node, 's'), MAX_LABEL)
   node.retText = svg('text', { x: 22, y: 31, class: 'ret' })
-  const title = svg('title')
-  title.textContent = callText(node, 'f')
-  node.element.append(label, node.retText, title)
+  node.element.append(label, node.retText)
+  attachTooltip(node.element, node)
   node.element.addEventListener('click', () => goTo(node.callIndex + 1, true))
   nodeLayer.append(node.element)
   node.className = 'node hidden'
@@ -89,7 +88,14 @@ function buildTree(trace) {
   const valueLayer = svg('g')
   tree.append(edgeLayer, nodeLayer, valueLayer)
 
+  // Rótulos de irmãos ficam a ~metade de um slot um do outro: o texto cabe nessa folga.
+  const edgeChars = Math.max(
+    MIN_EDGE_CHARS,
+    Math.floor((nodeWidth + SLOT_GAP) / 2 / EDGE_CHAR_WIDTH) - 1,
+  )
+
   for (const node of order) {
+    node.edgeChars = edgeChars
     buildNodeElement(node, nodeWidth, nodeLayer)
 
     if (!node.parent) {
@@ -100,6 +106,7 @@ function buildTree(trace) {
         y: node.y - 6,
       })
       node.edgeValueClass = 'edgeValue hidden'
+      attachTooltip(node.edgeValue, node, describeEdgeValue)
       valueLayer.append(node.edgeValue)
       continue
     }
@@ -121,6 +128,7 @@ function buildTree(trace) {
       y: middleY + 4,
     })
     node.edgeValueClass = 'edgeValue hidden'
+    attachTooltip(node.edgeValue, node, describeEdgeValue)
     valueLayer.append(node.edgeValue)
   }
 
@@ -146,7 +154,7 @@ function returnText(node, stateName) {
 function edgeValueText(node, returned) {
   if (!returned) return ''
   if (node.kind === 'throw') return '✖'
-  return shorten(node.value.s, 14)
+  return shorten(node.value.s, node.edgeChars)
 }
 
 function edgeDirection(node, lastEvent) {

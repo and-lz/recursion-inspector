@@ -1,15 +1,42 @@
 /* ---------- narração didática ---------- */
 
-function narrateCall(node, call, parentCall) {
+function mentions(source, name) {
+  return new RegExp(`(^|[^\\w$])${name.replace(/\$/g, '\\$')}($|[^\\w$])`).test(source)
+}
+
+// "`n <= 1` (com n = 1) é verdadeiro": só cita os parâmetros que aparecem na condição.
+function conditionText(node, cond) {
+  const used = variablesAt(node, 0).filter(
+    (variable) =>
+      variable.isParam && /^[\w$]+$/.test(variable.name) && mentions(cond.src, variable.name),
+  )
+  const values = used.length
+    ? ` (com ${used.map((variable) => `${variable.name} = ${shorten(variable.value, 40)}`).join(', ')})`
+    : ''
+  return `${code(cond.src)}${values} é <b>${cond.result ? 'verdadeiro' : 'falso'}</b>`
+}
+
+function conditionNote(node, step) {
+  const conds = condsAt(node, step)
+  if (!conds.length) return ''
+  const last = conds[conds.length - 1]
+  const text = conditionText(node, last)
+  if (last.result && node.isBase) return ` Teste: ${text} → é o caso base, não vai chamar ninguém.`
+  if (!last.result && !node.isBase) return ` Teste: ${text} → segue para o caso recursivo.`
+  return ` Teste: ${text}.`
+}
+
+function narrateCall(node, call, parentCall, step) {
+  const note = conditionNote(node, step)
   if (!node.parent)
-    return `<b>Início.</b> ${call} é a chamada inicial (profundidade 0). Ela vai ficar <i>esperando</i> até todas as chamadas que ela fizer terminarem.`
+    return `<b>Início.</b> ${call} é a chamada inicial (profundidade 0). Ela vai ficar <i>esperando</i> até todas as chamadas que ela fizer terminarem.${note}`
   const position = node.parent.children.indexOf(node)
   if (node.parent.fn !== node.fn) {
-    return `<b>Outra função recursiva.</b> ${parentCall} (${node.parent.fn}) chamou ${call} (${node.fn}). Uma nova recursão começa aqui dentro; as chamadas dela aparecem como filhas.`
+    return `<b>Outra função recursiva.</b> ${parentCall} (${node.parent.fn}) chamou ${call} (${node.fn}). Uma nova recursão começa aqui dentro; as chamadas dela aparecem como filhas.${note}`
   }
   return `<b>Nova chamada.</b> ${parentCall} chamou ${call} — é a <b>${ordinal(position)} chamada recursiva</b> dela${
     node.line ? ` (linha ${node.line})` : ''
-  }. Profundidade ${node.depth}: agora há ${node.depth + 1} chamadas empilhadas.`
+  }. Profundidade ${node.depth}: agora há ${node.depth + 1} chamadas empilhadas.${note}`
 }
 
 function narrate(step) {
@@ -23,11 +50,18 @@ function narrate(step) {
   const parentCall = node.parent ? code(callText(node.parent, 's')) : null
   const call = code(callText(node, 'f'))
 
-  if (event.t === 'c') return narrateCall(node, call, parentCall)
+  if (event.t === 'c') return narrateCall(node, call, parentCall, step)
 
   if (event.t === 't')
     return `<b>Erro.</b> ${call} lançou: ${code(event.msg)}. O erro sobe para quem chamou.`
 
+  return narrateReturn(node, event, step)
+}
+
+function narrateReturn(node, event, step) {
+  const trace = state.trace
+  const parentCall = node.parent ? code(callText(node.parent, 's')) : null
+  const call = code(callText(node, 'f'))
   const value = code(event.v.f)
   const destination = parentCall
     ? `devolve ${value} para ${parentCall}`
@@ -39,12 +73,20 @@ function narrate(step) {
     : ''
 
   if (node.children.length === 0) {
-    return `<b>Caso base.</b> ${call} não precisou chamar ninguém e ${destination}.${followUp}`
+    const reason = [...condsAt(node, step)].reverse().find((cond) => cond.result)
+    const opening = reason
+      ? `${conditionText(node, reason)}, então ${call} não precisou chamar ninguém`
+      : `${call} não precisou chamar ninguém`
+    return `<b>Caso base.</b> ${opening} e ${destination}.${followUp}`
   }
   const parts = node.children
     .map((child) => (child.value && child.kind === 'return' ? child.value.s : '✖'))
     .join(', ')
-  return `<b>Voltando.</b> Todas as ${node.children.length} chamadas filhas de ${call} terminaram (resultados: ${code(parts)}). Combinando, ela ${destination}.${followUp}`
+  const locals = localsAt(node, step)
+    .map((local) => code(`${local.name} = ${shorten(local.v.f, 30)}`))
+    .join(', ')
+  const kept = locals ? ` Variáveis guardadas: ${locals}.` : ''
+  return `<b>Voltando.</b> Todas as ${node.children.length} chamadas filhas de ${call} terminaram (resultados: ${code(parts)}).${kept} Combinando, ela ${destination}.${followUp}`
 }
 
 function renderSummary(step) {
@@ -76,7 +118,7 @@ function renderReturns(step) {
     chip.className = `retChip${failed ? ' error' : ''}${node.isBase ? ' base' : ''}${chips.length === 0 ? ' latest' : ''}`
     const outcome = failed ? `✖ ${shorten(event.msg, 30)}` : event.v.s
     chip.innerHTML = `${escapeHtml(shorten(callText(node, 's'), 36))} → <b>${escapeHtml(outcome)}</b>`
-    chip.title = failed ? event.msg : `${callText(node, 'f')} retornou ${event.v.f}`
+    attachTooltip(chip, node)
     chip.addEventListener('click', () => goTo(index + 1, true))
     chips.push(chip)
   }
@@ -101,6 +143,7 @@ function renderStack(focus, lastEvent) {
     const frame = document.createElement('div')
     frame.className = `frame${index === 0 ? ' top' : ''}`
     frame.innerHTML = `<code>${escapeHtml(shorten(callText(node, 's'), 36))}</code><small>${index === 0 ? 'executando' : 'esperando'}</small>`
+    attachTooltip(frame, node)
     elements.stack.append(frame)
   })
   if (frames.length > visible.length) {
@@ -112,17 +155,74 @@ function renderStack(focus, lastEvent) {
   if (!frames.length) elements.stack.innerHTML = '<i>vazia — tudo terminou</i>'
 }
 
-function renderVars(focus, lastEvent) {
+function variableLines(node, step) {
+  return variablesAt(node, step).map(
+    (variable) =>
+      `<div class="var"><b>${escapeHtml(variable.name)}</b> = ${escapeHtml(variable.value)}</div>`,
+  )
+}
+
+function conditionLines(node, step) {
+  return condsAt(node, step).flatMap((cond) => {
+    const operands = (cond.operands || []).map(
+      (operand) =>
+        `<div class="var operand"><b>${escapeHtml(operand.src)}</b> = ${escapeHtml(operand.v.f)}</div>`,
+    )
+    return [
+      ...operands,
+      `<div class="var cond"><b>teste</b> ${escapeHtml(cond.src)} → ${cond.result ? 'verdadeiro' : 'falso'}</div>`,
+    ]
+  })
+}
+
+function renderVars(focus, lastEvent, step) {
   const lines = []
   if (focus) {
-    focus.args.forEach((arg, index) => {
-      const param = (state.data.functionParams[focus.fn] || [])[index] || `arg${index}`
-      lines.push(`<div class="var"><b>${escapeHtml(param)}</b> = ${escapeHtml(arg.f)}</div>`)
-    })
+    lines.push(...variableLines(focus, step))
     if (lastEvent.t === 'r')
       lines.push(`<div class="var"><b>retorno</b> = ${escapeHtml(focus.value.f)}</div>`)
+    lines.push(...conditionLines(focus, step))
   }
   elements.vars.innerHTML = lines.join('') || '<i>—</i>'
+}
+
+const STATE_LABELS = {
+  active: 'executando',
+  waiting: 'esperando os filhos',
+  returning: 'acabou de retornar',
+  done: 'já retornou',
+  error: 'lançou erro',
+}
+
+function describeNode(node, step) {
+  const lastEvent = step > 0 ? state.trace.events[step - 1] : null
+  const stateName = nodeState(node, step, lastEvent)
+  const returned = stateName === 'done' || stateName === 'returning'
+  const meta = [
+    STATE_LABELS[stateName],
+    node.line ? `chamada na linha ${node.line}` : null,
+    `profundidade ${node.depth}`,
+  ].filter(Boolean)
+
+  const rows = [
+    `<div class="tipTitle">${code(callText(node, 'f'))}</div>`,
+    `<div class="tipMeta">${meta.join(' · ')}</div>`,
+    ...variableLines(node, step),
+    ...conditionLines(node, step),
+  ]
+  if (returned) rows.push(`<div class="var"><b>retorno</b> = ${escapeHtml(node.value.f)}</div>`)
+  if (stateName === 'error')
+    rows.push(`<div class="var"><b>erro</b> ${escapeHtml(node.message)}</div>`)
+  if (returned && node.isBase) rows.push('<div class="tipNote">caso base: não chamou ninguém</div>')
+
+  const finished = node.children.filter((child) => child.endIndex < step)
+  if (finished.length) {
+    const results = finished.map((child) => (child.kind === 'return' ? child.value.s : '✖'))
+    rows.push(
+      `<div class="tipNote">filhos que já retornaram: ${escapeHtml(results.join(', '))}</div>`,
+    )
+  }
+  return rows.join('')
 }
 
 function buildLog(trace) {

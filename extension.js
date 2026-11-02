@@ -6,7 +6,13 @@ const { instrument } = require('./src/instrument')
 const { runTrace } = require('./src/run')
 
 // Ordem importa: scripts clássicos compartilham o escopo global.
-const PANEL_SCRIPTS = ['panel-state.js', 'panel-tree.js', 'panel-details.js', 'panel.js']
+const PANEL_SCRIPTS = [
+  'panel-state.js',
+  'panel-tree.js',
+  'panel-details.js',
+  'panel-tooltip.js',
+  'panel.js',
+]
 
 let panel = null
 let pendingPayload = null

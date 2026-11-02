@@ -54,6 +54,50 @@ async function testFib() {
   await testTruncation(fib)
 }
 
+async function testProbes() {
+  const source = `function sumTo(n, total = 0) {
+  if (n === 0) return total
+  const next = n - 1
+  total += n
+  let count = 0
+  count++
+  const copy = (total = total + 0)
+  return sumTo(next, total) + count * 0
+}
+function pick(n) { let hit; if (hit = n < 2) return n; return pick(n - 1) + pick(n - 2) }
+console.log(sumTo(3), pick(4))`
+  const found = findRecursiveFunctions(source)
+  const sumTo = found.find((fn) => fn.name === 'sumTo')
+  const { code } = instrument(source, sumTo.start)
+  assert.strictEqual(code.split('\n').length, source.split('\n').length, 'linhas preservadas')
+  const result = await runTrace(code)
+  assert.strictEqual(result.error, null)
+  assert.deepStrictEqual(result.stdout, ['6 3'], 'sondas não mudam o resultado')
+
+  const first = result.probes.filter((probe) => probe.id === 0)
+  assert.deepStrictEqual(
+    first.filter((probe) => probe.kind === 'cond').map((probe) => [probe.src, probe.result]),
+    [['n === 0', false]],
+  )
+  const totals = first.filter((probe) => probe.name === 'total').map((probe) => probe.v.s)
+  assert.deepStrictEqual(totals, ['3', '3'], 'total += n e atribuição aninhada')
+  assert.strictEqual(
+    first.find((probe) => probe.name === 'count' && probe.line === 6).v.s,
+    '1',
+    'count++ registra o valor novo',
+  )
+  const leaf = result.probes.filter((probe) => probe.kind === 'cond' && probe.result)
+  assert.ok(leaf.some((probe) => probe.src === 'n === 0'))
+  assert.ok(
+    result.probes.every((probe) => probe.at >= 1 && probe.at <= result.events.length),
+    'at dentro do intervalo de eventos',
+  )
+
+  const pick = found.find((fn) => fn.name === 'pick')
+  const pickResult = await runTrace(instrument(source, pick.start).code)
+  assert.deepStrictEqual(pickResult.stdout, ['6 3'], 'atribuição dentro de if')
+}
+
 async function testTruncation(fib) {
   const bigSource = fibSource.replace('fib(5)', 'fib(25)')
   const bigTrace = await runTrace(instrument(bigSource, fib.start).code)
@@ -108,6 +152,7 @@ console.log(isEven(4), contains({ l: null, r: { l: null, r: null } }, { l: null,
 
 async function main() {
   await testFib()
+  await testProbes()
   await testSameTree()
   await testMutual()
   console.log('OK')

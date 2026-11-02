@@ -9,6 +9,28 @@ function wrapperFor(fn) {
     : `;${fn.declKeyword} ${fn.name} = function${wrapperBody};`
 }
 
+const WRAPPER_RANK = 0
+const PREFIX_RANK = 1e6
+const SUFFIX_RANK = 2e6
+
+function probeEdits(fn) {
+  return fn.probes.flatMap((probe) => {
+    const name = JSON.stringify(probe.name)
+    const wrapsInParens = probe.type === 'cond' || probe.type === 'operand'
+    const hook = probe.type === 'operand' ? '__operand' : '__cond'
+    const prefix = wrapsInParens
+      ? `${hook}(${JSON.stringify(probe.src)}, ${probe.line}, (`
+      : `__var(${name}, ${probe.line}, `
+    let suffix = ')'
+    if (wrapsInParens) suffix = '))'
+    if (probe.type === 'update') suffix = `, ${probe.name})`
+    return [
+      { from: probe.start, to: probe.start, text: prefix, rank: PREFIX_RANK - probe.seq },
+      { from: probe.end, to: probe.end, text: suffix, rank: SUFFIX_RANK + probe.seq },
+    ]
+  })
+}
+
 // Troca cada função recursiva do arquivo (a clicada e as que ela chama em ciclo)
 // por um wrapper que registra entrada/saída. Só insere texto na mesma linha,
 // então os números de linha não mudam.
@@ -18,10 +40,15 @@ function instrument(source, start) {
   if (!target) throw new Error('Função recursiva não encontrada (o arquivo mudou?).')
 
   const edits = functions.flatMap((fn) => [
-    { from: fn.idStart, to: fn.idEnd, text: `__orig_${fn.name}` },
-    { from: fn.end, to: fn.end, text: wrapperFor(fn) },
+    { from: fn.idStart, to: fn.idEnd, text: `__orig_${fn.name}`, rank: WRAPPER_RANK },
+    { from: fn.end, to: fn.end, text: wrapperFor(fn), rank: WRAPPER_RANK },
+    ...probeEdits(fn),
   ])
-  edits.sort((first, second) => second.from - first.from || second.to - first.to)
+  // Aplica de trás para frente. Inserções na mesma posição: o wrapper entra primeiro (fica
+  // mais à direita); depois os prefixos de dentro para fora e os sufixos de fora para dentro.
+  edits.sort(
+    (first, second) => second.from - first.from || second.to - first.to || first.rank - second.rank,
+  )
 
   let code = source
   for (const edit of edits) code = code.slice(0, edit.from) + edit.text + code.slice(edit.to)
