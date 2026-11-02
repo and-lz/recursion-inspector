@@ -152,7 +152,7 @@ function returnText(node, stateName) {
 }
 
 // Objeto/array que não cabe na aresta vira um resumo; o conteúdo fica no hover.
-const COLLAPSED = { '{': '{…}', '[': '[…]' }
+const COLLAPSED = { '{': '{}', '[': '[]' }
 
 function edgeValueText(node, returned) {
   if (!returned) return ''
