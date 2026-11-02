@@ -151,10 +151,16 @@ function returnText(node, stateName) {
   return `✖ ${shorten(node.message, 22)}`
 }
 
+// Objeto/array que não cabe na aresta vira um resumo; o conteúdo fica no hover.
+const COLLAPSED = { '{': '{…}', '[': '[…]' }
+
 function edgeValueText(node, returned) {
   if (!returned) return ''
   if (node.kind === 'throw') return '✖'
-  return shorten(node.value.s, node.edgeChars)
+  const text = node.value.s
+  if (text.length <= node.edgeChars) return text
+  const summary = COLLAPSED[text[0]]
+  return summary ?? shorten(text, node.edgeChars)
 }
 
 function edgeDirection(node, lastEvent) {
