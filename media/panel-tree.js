@@ -43,12 +43,12 @@ function layout(trace) {
   const slotWidth = nodeWidth + SLOT_GAP
   for (const node of order) {
     node.x = MARGIN + node.slot * slotWidth
-    node.y = MARGIN + node.depth * (NODE_HEIGHT + LEVEL_GAP)
+    node.y = TOP_MARGIN + node.depth * (NODE_HEIGHT + LEVEL_GAP)
   }
   return {
     nodeWidth,
     width: MARGIN * 2 + leaves * slotWidth,
-    height: MARGIN * 2 + (trace.maxDepth + 1) * (NODE_HEIGHT + LEVEL_GAP),
+    height: TOP_MARGIN + MARGIN + (trace.maxDepth + 1) * (NODE_HEIGHT + LEVEL_GAP),
     order,
   }
 }

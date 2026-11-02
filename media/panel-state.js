@@ -8,6 +8,7 @@ const SLOT_GAP = 14
 const EDGE_CHAR_WIDTH = 7.5
 const MIN_EDGE_CHARS = 4
 const MARGIN = 20
+const TOP_MARGIN = 48
 const MAX_LABEL = 30
 const SVG_NS = 'http://www.w3.org/2000/svg'
 const FN_COLORS = ['#3b82f6', '#c084fc', '#f97316', '#14b8a6', '#ec4899', '#a3a3a3']
