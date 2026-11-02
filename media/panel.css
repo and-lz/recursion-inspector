@@ -360,6 +360,7 @@ footer {
 }
 #tree .edgeValue {
   cursor: help;
+  pointer-events: all;
   font-weight: bold;
   fill: var(--done);
   font-size: 12px;
