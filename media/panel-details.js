@@ -194,35 +194,57 @@ const STATE_LABELS = {
   error: 'lançou erro',
 }
 
+function tipSection(label, body, className = '') {
+  return `<section class="tipSection ${className}"><h4>${label}</h4>${body}</section>`
+}
+
+function tipRow(name, value) {
+  return `<div class="tipRow"><span class="tipKey">${escapeHtml(name)}</span><span class="tipVal">${escapeHtml(value)}</span></div>`
+}
+
+function tipConditions(node, step) {
+  return condsAt(node, step)
+    .map((cond) => {
+      const operands = (cond.operands || []).map((operand) => tipRow(operand.src, operand.v.f))
+      const verdict = cond.result ? 'verdadeiro' : 'falso'
+      return `<div class="tipCond"><code>${escapeHtml(cond.src)}</code><span class="tipPill ${cond.result ? 'yes' : 'no'}">${verdict}</span></div>${operands.join('')}`
+    })
+    .join('')
+}
+
+function tipChildren(node, step) {
+  const finished = node.children.filter((child) => child.endIndex < step)
+  if (!finished.length) return ''
+  const results = finished.map((child) => (child.kind === 'return' ? child.value.s : '✖'))
+  return `<div class="tipNote">filhos que já retornaram: ${escapeHtml(results.join(', '))}</div>`
+}
+
 function describeNode(node, step) {
   const lastEvent = step > 0 ? state.trace.events[step - 1] : null
   const stateName = nodeState(node, step, lastEvent)
   const returned = stateName === 'done' || stateName === 'returning'
   const meta = [
-    STATE_LABELS[stateName],
     node.line ? `chamada na linha ${node.line}` : null,
     `profundidade ${node.depth}`,
+    returned && node.isBase ? 'caso base' : null,
   ].filter(Boolean)
 
-  const rows = [
-    `<div class="tipTitle">${code(callText(node, 'f'))}</div>`,
-    `<div class="tipMeta">${meta.join(' · ')}</div>`,
-    ...variableLines(node, step),
-    ...conditionLines(node, step),
+  const variables = variablesAt(node, step).map((variable) => tipRow(variable.name, variable.value))
+  const conditions = tipConditions(node, step)
+  const sections = [
+    variables.length ? tipSection('Variáveis', variables.join('')) : '',
+    conditions ? tipSection('Testes', conditions) : '',
+    returned
+      ? tipSection('Retorno', `<div class="tipResult">${escapeHtml(node.value.f)}</div>`)
+      : '',
+    stateName === 'error' ? tipSection('Erro', escapeHtml(node.message), 'failed') : '',
   ]
-  if (returned) rows.push(`<div class="var"><b>retorno</b> = ${escapeHtml(node.value.f)}</div>`)
-  if (stateName === 'error')
-    rows.push(`<div class="var"><b>erro</b> ${escapeHtml(node.message)}</div>`)
-  if (returned && node.isBase) rows.push('<div class="tipNote">caso base: não chamou ninguém</div>')
-
-  const finished = node.children.filter((child) => child.endIndex < step)
-  if (finished.length) {
-    const results = finished.map((child) => (child.kind === 'return' ? child.value.s : '✖'))
-    rows.push(
-      `<div class="tipNote">filhos que já retornaram: ${escapeHtml(results.join(', '))}</div>`,
-    )
-  }
-  return rows.join('')
+  return [
+    `<header class="tipHead">${code(callText(node, 'f'))}<span class="tipState ${stateName}">${STATE_LABELS[stateName]}</span></header>`,
+    `<div class="tipMeta">${meta.join(' · ')}</div>`,
+    ...sections,
+    tipChildren(node, step),
+  ].join('')
 }
 
 function buildLog(trace) {

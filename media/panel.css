@@ -491,42 +491,139 @@ header {
 #tooltip {
   position: fixed;
   z-index: 10;
+  min-width: 260px;
   max-width: 480px;
-  padding: 8px 10px;
+  padding: 12px 14px;
   border: 1px solid var(--vscode-editorHoverWidget-border, var(--border));
-  border-radius: var(--radius);
+  border-radius: 10px;
   background: var(--vscode-editorHoverWidget-background, var(--vscode-editor-background));
   color: var(--vscode-editorHoverWidget-foreground, var(--vscode-foreground));
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
   font-size: 12px;
+  line-height: 1.5;
   pointer-events: none;
 }
 #tooltip[hidden] {
   display: none;
 }
-#tooltip .tipValue {
-  margin: 4px 0 0;
+#tooltip code {
+  font-family: var(--vscode-editor-font-family);
+  word-break: break-all;
+}
+.tipHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 13px;
+  font-weight: 600;
+}
+.tipState {
+  flex: none;
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--waiting);
+  background: color-mix(in srgb, var(--waiting) 16%, transparent);
+}
+.tipState.active {
+  color: var(--active);
+  background: color-mix(in srgb, var(--active) 16%, transparent);
+}
+.tipState.done,
+.tipState.returning {
+  color: var(--done);
+  background: color-mix(in srgb, var(--done) 16%, transparent);
+}
+.tipState.error {
+  color: var(--error);
+  background: color-mix(in srgb, var(--error) 16%, transparent);
+}
+.tipMeta {
+  margin-top: 4px;
+  font-size: 11px;
+  opacity: 0.6;
+}
+.tipSection {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+.tipSection h4 {
+  margin: 0 0 6px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  opacity: 0.55;
+}
+.tipRow {
+  display: grid;
+  grid-template-columns: minmax(70px, max-content) 1fr;
+  gap: 4px 14px;
+  padding: 2px 0;
+  font-family: var(--vscode-editor-font-family);
+}
+.tipKey {
+  color: var(--vscode-symbolIcon-variableForeground, var(--active));
+}
+.tipVal {
+  word-break: break-all;
+}
+.tipCond {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 4px;
+}
+.tipCond:first-child {
+  margin-top: 0;
+}
+.tipCond ~ .tipRow {
+  opacity: 0.7;
+  padding-left: 10px;
+}
+.tipPill {
+  flex: none;
+  padding: 0 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+}
+.tipPill.yes {
+  color: var(--done);
+  background: color-mix(in srgb, var(--done) 16%, transparent);
+}
+.tipPill.no {
+  color: var(--error);
+  background: color-mix(in srgb, var(--error) 16%, transparent);
+}
+.tipResult {
+  font-family: var(--vscode-editor-font-family);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--done);
+  word-break: break-all;
+}
+.tipSection.failed .tipVal,
+.tipSection.failed {
+  color: var(--error);
+}
+.tipValue {
+  margin: 0;
   max-height: 50vh;
   overflow: hidden;
   font-family: var(--vscode-editor-font-family);
   white-space: pre;
 }
-#tooltip code {
-  font-family: var(--vscode-editor-font-family);
-  word-break: break-all;
-}
-.tipTitle {
-  font-weight: bold;
-  margin-bottom: 2px;
-}
-.tipMeta,
 .tipNote {
-  opacity: 0.7;
-  margin-bottom: 4px;
-}
-.tipNote {
-  margin-top: 4px;
-  margin-bottom: 0;
+  margin-top: 10px;
+  font-size: 11px;
+  opacity: 0.6;
 }
 .var.cond {
   opacity: 0.8;

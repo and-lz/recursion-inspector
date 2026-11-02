@@ -113,9 +113,11 @@ function prettify(text) {
 function describeEdgeValue(node, step) {
   const lastEvent = step > 0 ? state.trace.events[step - 1] : null
   const stateName = nodeState(node, step, lastEvent)
-  const title = `<div class="tipTitle">${code(callText(node, 'f'))}</div>`
-  if (stateName === 'error')
-    return `${title}<div class="var"><b>erro</b> ${escapeHtml(node.message)}</div>`
+  const head = `<header class="tipHead">${code(callText(node, 'f'))}</header>`
+  if (stateName === 'error') return head + tipSection('Erro', escapeHtml(node.message), 'failed')
   if (stateName !== 'done' && stateName !== 'returning') return ''
-  return `${title}<div class="tipMeta">retorno</div><pre class="tipValue">${escapeHtml(prettify(node.value.f))}</pre>`
+  return (
+    head +
+    tipSection('Retorno', `<pre class="tipValue">${escapeHtml(prettify(node.value.f))}</pre>`)
+  )
 }
