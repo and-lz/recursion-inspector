@@ -46,10 +46,15 @@ function tick() {
   scheduleNext()
 }
 
+// Explicado: um passo por vez, sem pressa. Compacto: a animação inteira cabe em COMPACT_TOTAL_MS.
+function stepDelay() {
+  if (elements.modeSelect.value === 'explained') return EXPLAINED_DELAY_MS
+  return Math.min(COMPACT_MAX_DELAY_MS, COMPACT_TOTAL_MS / state.trace.events.length)
+}
+
 function scheduleNext() {
   clearTimeout(state.timer)
-  const speed = Number(elements.speedSelect.value)
-  state.timer = setTimeout(tick, DELAY_MS[elements.modeSelect.value] / speed)
+  state.timer = setTimeout(tick, stepDelay())
 }
 
 function onTimingChange() {
@@ -132,7 +137,6 @@ function saveSettings() {
     type: 'settings',
     settings: {
       mode: elements.modeSelect.value,
-      speed: elements.speedSelect.value,
       showExplain: elements.showExplain.checked,
       showReturns: elements.showReturns.checked,
       showSidebar: elements.showSidebar.checked,
@@ -142,7 +146,6 @@ function saveSettings() {
 
 function applySettings(settings) {
   if (settings.mode) elements.modeSelect.value = settings.mode
-  if (settings.speed) elements.speedSelect.value = settings.speed
   elements.showExplain.checked = Boolean(settings.showExplain)
   elements.showReturns.checked = Boolean(settings.showReturns)
   elements.showSidebar.checked = settings.showSidebar !== false
@@ -155,7 +158,6 @@ for (const control of [
   elements.showReturns,
   elements.showSidebar,
   elements.modeSelect,
-  elements.speedSelect,
 ]) {
   control.addEventListener('change', saveSettings)
 }
@@ -175,7 +177,6 @@ elements.rootSelect.addEventListener('change', () => selectRoot(Number(elements.
 elements.slider.addEventListener('input', () => goTo(Number(elements.slider.value), true))
 elements.play.addEventListener('click', togglePlay)
 elements.modeSelect.addEventListener('change', onTimingChange)
-elements.speedSelect.addEventListener('change', onTimingChange)
 elements.first.addEventListener('click', () => goTo(0, true))
 elements.prev.addEventListener('click', () => goTo(state.step - 1, true))
 elements.next.addEventListener('click', () => goTo(state.step + 1, true))

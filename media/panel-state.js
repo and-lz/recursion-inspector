@@ -12,7 +12,9 @@ const TOP_MARGIN = 48
 const MAX_LABEL = 30
 const SVG_NS = 'http://www.w3.org/2000/svg'
 const FN_COLORS = ['#3b82f6', '#c084fc', '#f97316', '#14b8a6', '#ec4899', '#a3a3a3']
-const DELAY_MS = { explained: 1400, compact: 250 }
+const EXPLAINED_DELAY_MS = 1400
+const COMPACT_MAX_DELAY_MS = 250
+const COMPACT_TOTAL_MS = 2000
 
 const elements = {}
 for (const id of [
@@ -30,7 +32,6 @@ for (const id of [
   'title',
   'rootSelect',
   'modeSelect',
-  'speedSelect',
   'explainText',
   'summary',
   'tree',
