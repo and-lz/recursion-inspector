@@ -32,18 +32,8 @@ function goTo(step, userAction) {
 
 function pause() {
   state.playing = false
-  clearTimeout(state.timer)
+  cancelAnimationFrame(state.timer)
   elements.play.textContent = '▶ Play'
-}
-
-function tick() {
-  if (!state.playing) return
-  if (state.step >= state.trace.events.length) {
-    pause()
-    return
-  }
-  goTo(state.step + 1, false)
-  scheduleNext()
 }
 
 // Explicado: um passo por vez, sem pressa. Compacto: a animação inteira cabe em COMPACT_TOTAL_MS.
@@ -52,20 +42,34 @@ function stepDelay() {
   return Math.min(COMPACT_MAX_DELAY_MS, COMPACT_TOTAL_MS / state.trace.events.length)
 }
 
-function scheduleNext() {
-  clearTimeout(state.timer)
-  state.timer = setTimeout(tick, stepDelay())
+// O passo vem do relógio, não de um timer por passo: se renderizar demora mais que o intervalo,
+// pula passos em vez de atrasar a animação.
+function frame(now) {
+  if (!state.playing) return
+  const total = state.trace.events.length
+  const target = state.playFrom.step + Math.floor((now - state.playFrom.time) / stepDelay())
+  if (target > state.step) goTo(Math.min(target, total), false)
+  if (state.step >= total) {
+    pause()
+    return
+  }
+  state.timer = requestAnimationFrame(frame)
+}
+
+function restartClock() {
+  state.playFrom = { time: performance.now(), step: state.step }
 }
 
 function onTimingChange() {
-  if (state.playing) scheduleNext()
+  if (state.playing) restartClock()
 }
 
 function play() {
   if (state.step >= state.trace.events.length) goTo(0, false)
   state.playing = true
   elements.play.textContent = '⏸ Pausar'
-  tick()
+  restartClock()
+  state.timer = requestAnimationFrame(frame)
 }
 
 function togglePlay() {

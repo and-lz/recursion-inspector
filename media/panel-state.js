@@ -59,6 +59,7 @@ const state = {
   step: 0,
   playing: false,
   timer: null,
+  playFrom: null,
   view: null,
 }
 
