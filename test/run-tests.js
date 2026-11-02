@@ -1,6 +1,5 @@
 const assert = require('assert')
 const fs = require('fs')
-const vm = require('vm')
 const { findRecursiveFunctions } = require('../src/detect')
 const { instrument } = require('../src/instrument')
 const { runTrace } = require('../src/run')
@@ -24,7 +23,7 @@ function outer(n) {
 console.log(fib(5), sum([1, 2, 3]), outer(3))
 `
 
-async function main() {
+async function testFib() {
   const found = findRecursiveFunctions(fibSource)
   assert.deepStrictEqual(
     found.map((fn) => fn.name),
@@ -44,11 +43,18 @@ async function main() {
 
   const fib = found[0]
   const fibTrace = await runTrace(instrument(fibSource, fib.start).code)
-  assert.strictEqual(fibTrace.events.filter((event) => event.t === 'c' && event.fn === 'fib').length, 15)
+  assert.strictEqual(
+    fibTrace.events.filter((event) => event.t === 'c' && event.fn === 'fib').length,
+    15,
+  )
   const rootReturn = fibTrace.events.find((event) => event.t === 'r' && event.id === 0)
   assert.strictEqual(rootReturn.v.s, '5')
   assert.strictEqual(fibTrace.events[1].line, 4, 'linha da chamada recursiva')
 
+  await testTruncation(fib)
+}
+
+async function testTruncation(fib) {
   const bigSource = fibSource.replace('fib(5)', 'fib(25)')
   const bigTrace = await runTrace(instrument(bigSource, fib.start).code)
   assert.ok(bigTrace.truncated, 'trunca no limite de eventos')
@@ -59,21 +65,27 @@ async function main() {
   const overflowFn = findRecursiveFunctions(overflowSource)[0]
   const overflowTrace = await runTrace(instrument(overflowSource, overflowFn.start).code)
   assert.ok(overflowTrace.error, 'estouro de pilha reportado')
-  assert.ok(overflowTrace.events.some((event) => event.t === 't'), 'throw registrado')
+  assert.ok(
+    overflowTrace.events.some((event) => event.t === 't'),
+    'throw registrado',
+  )
+}
 
-  if (fs.existsSync(sameTreePath)) {
-    const sameTree = fs.readFileSync(sameTreePath, 'utf8')
-    const sameFns = findRecursiveFunctions(sameTree)
-    assert.deepStrictEqual(
-      sameFns.map((fn) => fn.name),
-      ['isSameTree'],
-    )
-    assert.strictEqual(sameFns[0].line, 42)
-    const traced = await runTrace(instrument(sameTree, sameFns[0].start).code)
-    assert.strictEqual(traced.error, null)
-    assert.ok(traced.events.length > 0)
-  }
+async function testSameTree() {
+  if (!fs.existsSync(sameTreePath)) return
+  const sameTree = fs.readFileSync(sameTreePath, 'utf8')
+  const sameFns = findRecursiveFunctions(sameTree)
+  assert.deepStrictEqual(
+    sameFns.map((fn) => fn.name),
+    ['isSameTree'],
+  )
+  assert.strictEqual(sameFns[0].line, 42)
+  const traced = await runTrace(instrument(sameTree, sameFns[0].start).code)
+  assert.strictEqual(traced.error, null)
+  assert.ok(traced.events.length > 0)
+}
 
+async function testMutual() {
   const mutualSource = `function isEven(n) { return n === 0 ? true : isOdd(n - 1) }
 function isOdd(n) { return n === 0 ? false : isEven(n - 1) }
 function same(a, b) { return a === null && b === null ? true : a === null || b === null ? false : same(a.l, b.l) && same(a.r, b.r) }
@@ -88,8 +100,16 @@ console.log(isEven(4), contains({ l: null, r: { l: null, r: null } }, { l: null,
   const mutualTrace = await runTrace(instrument(mutualSource, contains.start).code)
   assert.strictEqual(mutualTrace.error, null)
   assert.deepStrictEqual(mutualTrace.stdout, ['true true'])
-  assert.ok(mutualTrace.events.some((event) => event.t === 'c' && event.fn === 'same'), 'chamadas de same registradas')
+  assert.ok(
+    mutualTrace.events.some((event) => event.t === 'c' && event.fn === 'same'),
+    'chamadas de same registradas',
+  )
+}
 
+async function main() {
+  await testFib()
+  await testSameTree()
+  await testMutual()
   console.log('OK')
 }
 

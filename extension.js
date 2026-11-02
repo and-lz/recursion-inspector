@@ -5,6 +5,9 @@ const { findRecursiveFunctions } = require('./src/detect')
 const { instrument } = require('./src/instrument')
 const { runTrace } = require('./src/run')
 
+// Ordem importa: scripts clássicos compartilham o escopo global.
+const PANEL_SCRIPTS = ['panel-state.js', 'panel-tree.js', 'panel-details.js', 'panel.js']
+
 let panel = null
 let pendingPayload = null
 let inspectedUri = null
@@ -17,7 +20,7 @@ class RecursionLensProvider {
     let functions
     try {
       functions = findRecursiveFunctions(document.getText())
-    } catch (error) {
+    } catch {
       return []
     }
     return functions.map((fn) => {
@@ -33,13 +36,19 @@ class RecursionLensProvider {
 
 function buildHtml(webview, extensionPath) {
   const mediaPath = (name) => vscode.Uri.file(path.join(extensionPath, 'media', name))
-  const nonce = Array.from({ length: 24 }, () => Math.floor(Math.random() * 36).toString(36)).join('')
+  const nonce = Array.from({ length: 24 }, () => Math.floor(Math.random() * 36).toString(36)).join(
+    '',
+  )
   const html = fs.readFileSync(path.join(extensionPath, 'media', 'panel.html'), 'utf8')
+  const scriptTags = PANEL_SCRIPTS.map((name) => {
+    const src = webview.asWebviewUri(mediaPath(name)).toString()
+    return `    <script nonce="${nonce}" src="${src}"></script>`
+  }).join('\n')
   return html
     .replace(/{{nonce}}/g, nonce)
     .replace(/{{cspSource}}/g, webview.cspSource)
     .replace('{{css}}', webview.asWebviewUri(mediaPath('panel.css')).toString())
-    .replace('{{js}}', webview.asWebviewUri(mediaPath('panel.js')).toString())
+    .replace('{{scripts}}', scriptTags)
 }
 
 function setHighlight(line) {
@@ -96,7 +105,8 @@ function ensurePanel(context) {
   if (fullscreen) maximizeEditor()
   panel.webview.html = buildHtml(panel.webview, context.extensionPath)
   panel.webview.onDidReceiveMessage((message) => {
-    if (message.type === 'ready' && pendingPayload) panel.webview.postMessage({ type: 'data', payload: pendingPayload })
+    if (message.type === 'ready' && pendingPayload)
+      panel.webview.postMessage({ type: 'data', payload: pendingPayload })
     if (message.type === 'line') setHighlight(message.line)
     if (message.type === 'settings') context.globalState.update('settings', message.settings)
   })
@@ -123,7 +133,10 @@ async function inspect(context, uriString, start) {
   let result
   try {
     result = await vscode.window.withProgress(
-      { location: vscode.ProgressLocation.Notification, title: 'Executando e rastreando a recursão…' },
+      {
+        location: vscode.ProgressLocation.Notification,
+        title: 'Executando e rastreando a recursão…',
+      },
       () => runTrace(instrumented.code),
     )
   } catch (error) {
@@ -148,7 +161,10 @@ async function inspect(context, uriString, start) {
 
 function activate(context) {
   context.subscriptions.push(
-    vscode.languages.registerCodeLensProvider({ language: 'javascript' }, new RecursionLensProvider()),
+    vscode.languages.registerCodeLensProvider(
+      { language: 'javascript' },
+      new RecursionLensProvider(),
+    ),
     vscode.commands.registerCommand('recursionInspector.inspect', (uriString, start) =>
       inspect(context, uriString, start),
     ),

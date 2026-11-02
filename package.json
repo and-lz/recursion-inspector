@@ -18,7 +18,10 @@
       "properties": {
         "recursionInspector.layout": {
           "type": "string",
-          "enum": ["fullscreen", "beside"],
+          "enum": [
+            "fullscreen",
+            "beside"
+          ],
           "default": "fullscreen",
           "description": "fullscreen: painel ocupa todo o editor (sidebar escondida). beside: painel ao lado do código, com a linha atual destacada."
         }
@@ -32,10 +35,23 @@
     ]
   },
   "scripts": {
-    "test": "node test/run-tests.js"
+    "test": "node test/run-tests.js",
+    "lint": "eslint . --max-warnings 0",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "check": "npm run lint && npm run format:check && npm test",
+    "prepare": "git config core.hooksPath .githooks"
   },
   "dependencies": {
     "acorn": "^8.19.0",
     "acorn-walk": "^8.3.5"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.14.0",
+    "eslint-config-prettier": "^10.1.8",
+    "globals": "^17.14.0",
+    "prettier": "^3.9.10"
   }
 }

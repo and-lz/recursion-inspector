@@ -24,7 +24,8 @@ function calledNames(fnNode, names) {
   const called = new Set()
   walk.simple(fnNode.body, {
     CallExpression(call) {
-      if (call.callee.type === 'Identifier' && names.has(call.callee.name)) called.add(call.callee.name)
+      if (call.callee.type === 'Identifier' && names.has(call.callee.name))
+        called.add(call.callee.name)
     },
   })
   return called
@@ -47,7 +48,8 @@ function reachesItself(name, graph) {
 function paramLabel(source, param) {
   if (param.type === 'Identifier') return param.name
   if (param.type === 'AssignmentPattern' && param.left.type === 'Identifier') return param.left.name
-  if (param.type === 'RestElement' && param.argument.type === 'Identifier') return `...${param.argument.name}`
+  if (param.type === 'RestElement' && param.argument.type === 'Identifier')
+    return `...${param.argument.name}`
   return source.slice(param.start, param.end)
 }
 
@@ -61,7 +63,10 @@ function describe(source, name, fnNode, declNode, idNode, kind) {
     column: declNode.loc.start.column,
     idStart: idNode.start,
     idEnd: idNode.end,
-    declKeyword: kind === 'variable' ? source.slice(declNode.start, declNode.start + declNode.kind.length) : null,
+    declKeyword:
+      kind === 'variable'
+        ? source.slice(declNode.start, declNode.start + declNode.kind.length)
+        : null,
     params: fnNode.params.map((param) => paramLabel(source, param)),
   }
 }
@@ -73,7 +78,10 @@ function findRecursiveFunctions(source) {
   walk.simple(ast, {
     FunctionDeclaration(node) {
       if (!node.id || !isPlainFunction(node)) return
-      candidates.push({ fnNode: node, info: describe(source, node.id.name, node, node, node.id, 'declaration') })
+      candidates.push({
+        fnNode: node,
+        info: describe(source, node.id.name, node, node, node.id, 'declaration'),
+      })
     },
     VariableDeclaration(node) {
       if (node.declarations.length !== 1) return
@@ -83,7 +91,14 @@ function findRecursiveFunctions(source) {
       if (!isPlainFunction(declaration.init)) return
       candidates.push({
         fnNode: declaration.init,
-        info: describe(source, declaration.id.name, declaration.init, node, declaration.id, 'variable'),
+        info: describe(
+          source,
+          declaration.id.name,
+          declaration.init,
+          node,
+          declaration.id,
+          'variable',
+        ),
       })
     },
   })
@@ -91,7 +106,8 @@ function findRecursiveFunctions(source) {
   const names = new Set(candidates.map((candidate) => candidate.info.name))
   const graph = new Map([...names].map((name) => [name, new Set()]))
   for (const candidate of candidates) {
-    for (const callee of calledNames(candidate.fnNode, names)) graph.get(candidate.info.name).add(callee)
+    for (const callee of calledNames(candidate.fnNode, names))
+      graph.get(candidate.info.name).add(callee)
   }
 
   return candidates

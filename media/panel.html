@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
@@ -15,25 +15,30 @@
         <h1 id="title"></h1>
         <button id="menuButton" title="Opções" aria-label="Opções">☰</button>
         <div id="menu" hidden>
-        <label>Execução: <select id="rootSelect"></select></label>
-        <label>Modo:
-          <select id="modeSelect">
-            <option value="explained">Explicado (devagar)</option>
-            <option value="compact">Compacto (rápido)</option>
-          </select>
-        </label>
-        <label>Velocidade:
-          <select id="speedSelect">
-            <option value="0.25">0.25x</option>
-            <option value="0.5">0.5x</option>
-            <option value="1" selected>1x</option>
-            <option value="2">2x</option>
-            <option value="4">4x</option>
-          </select>
-        </label>
-        <label><input type="checkbox" id="showExplain" /> Explicação</label>
-        <label><input type="checkbox" id="showReturns" /> Faixa de retornos</label>
-        <label><input type="checkbox" id="showSidebar" checked /> Painel lateral</label>
+          <label
+            >Execução:
+            <select id="rootSelect"></select
+          ></label>
+          <label
+            >Modo:
+            <select id="modeSelect">
+              <option value="explained">Explicado (devagar)</option>
+              <option value="compact">Compacto (rápido)</option>
+            </select>
+          </label>
+          <label
+            >Velocidade:
+            <select id="speedSelect">
+              <option value="0.25">0.25x</option>
+              <option value="0.5">0.5x</option>
+              <option value="1" selected>1x</option>
+              <option value="2">2x</option>
+              <option value="4">4x</option>
+            </select>
+          </label>
+          <label><input type="checkbox" id="showExplain" /> Explicação</label>
+          <label><input type="checkbox" id="showReturns" /> Faixa de retornos</label>
+          <label><input type="checkbox" id="showSidebar" checked /> Painel lateral</label>
         </div>
       </header>
       <section id="explain" hidden>
@@ -74,6 +79,6 @@
         <span id="counter"></span>
       </footer>
     </div>
-    <script nonce="{{nonce}}" src="{{js}}"></script>
+    {{scripts}}
   </body>
 </html>

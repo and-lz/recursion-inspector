@@ -1,21 +1,40 @@
-// Roda media/panel.js com um DOM falso para pegar erros de lógica/ReferenceError.
+// Roda media/panel*.js com um DOM falso para pegar erros de lógica/ReferenceError.
 const assert = require('assert')
 const fs = require('fs')
+const path = require('path')
 const vm = require('vm')
 const { findRecursiveFunctions } = require('../src/detect')
 const { instrument } = require('../src/instrument')
 const { runTrace } = require('../src/run')
 
+const PANEL_SCRIPTS = ['panel-state.js', 'panel-tree.js', 'panel-details.js', 'panel.js']
+
 function fakeElement() {
   const element = {
-    children: [], style: {}, classList: { toggle() {}, add() {}, remove() {} }, listeners: {}, attrs: {},
-    append(...items) { this.children.push(...items) },
-    replaceChildren(...items) { this.children = items },
-    setAttribute(name, value) { this.attrs[name] = value },
-    addEventListener(name, fn) { this.listeners[name] = fn },
+    children: [],
+    style: {},
+    classList: { toggle() {}, add() {}, remove() {} },
+    listeners: {},
+    attrs: {},
+    append(...items) {
+      this.children.push(...items)
+    },
+    replaceChildren(...items) {
+      this.children = items
+    },
+    setAttribute(name, value) {
+      this.attrs[name] = value
+    },
+    addEventListener(name, fn) {
+      this.listeners[name] = fn
+    },
     scrollIntoView() {},
-    set innerHTML(value) { this._html = value },
-    get innerHTML() { return this._html || '' },
+    set innerHTML(value) {
+      this._html = value
+    },
+    get innerHTML() {
+      return this._html || ''
+    },
     value: '0',
   }
   return element
@@ -26,27 +45,46 @@ function loadPanel(payload) {
   const messages = []
   let onMessage
   const sandbox = {
-    acquireVsCodeApi: () => ({ postMessage: (message) => messages.push(message), getState: () => ({}), setState() {} }),
+    acquireVsCodeApi: () => ({
+      postMessage: (message) => messages.push(message),
+      getState: () => ({}),
+      setState() {},
+    }),
     document: {
       getElementById: (id) => (cache[id] ||= fakeElement()),
       createElement: fakeElement,
       createElementNS: fakeElement,
       addEventListener() {},
     },
-    window: { addEventListener: (name, fn) => { onMessage = fn } },
-    setTimeout, clearTimeout,
+    window: {
+      addEventListener: (name, fn) => {
+        onMessage = fn
+      },
+    },
+    setTimeout,
+    clearTimeout,
   }
-  vm.runInNewContext(fs.readFileSync(__dirname + '/../media/panel.js', 'utf8'), sandbox)
+  const source = PANEL_SCRIPTS.map((name) =>
+    fs.readFileSync(path.join(__dirname, '..', 'media', name), 'utf8'),
+  ).join('\n')
+  vm.runInNewContext(source, sandbox)
   onMessage({ data: { type: 'data', payload } })
   return cache
-
 }
 
 async function main() {
-  const source = 'function fib(n) {\n  if (n < 2) return n\n  return fib(n - 1) + fib(n - 2)\n}\nfib(4)\nfib(1)'
+  const source =
+    'function fib(n) {\n  if (n < 2) return n\n  return fib(n - 1) + fib(n - 2)\n}\nfib(4)\nfib(1)'
   const fn = findRecursiveFunctions(source)[0]
   const result = await runTrace(instrument(source, fn.start).code)
-  const payload = { fnName: 'fib', fnLine: 1, params: fn.params, functionParams: { fib: fn.params }, fileName: 'x.js', ...result }
+  const payload = {
+    fnName: 'fib',
+    fnLine: 1,
+    params: fn.params,
+    functionParams: { fib: fn.params },
+    fileName: 'x.js',
+    ...result,
+  }
 
   const cache = loadPanel(payload)
   assert.strictEqual(cache.rootSelect.children.length, 2)
@@ -67,12 +105,17 @@ function contains(root, sub) { return root === null ? false : same(root, sub) ||
 same(null, null)
 contains({ l: { l: null, r: null }, r: null }, { l: null, r: null })`
   const mutual = findRecursiveFunctions(mutualSource)
-  const contains = mutual.find((fn) => fn.name === 'contains')
+  const contains = mutual.find((candidate) => candidate.name === 'contains')
   const instrumented = instrument(mutualSource, contains.start)
   const mutualResult = await runTrace(instrumented.code)
   const mutualCache = loadPanel({
-    fnName: 'contains', fnLine: 2, params: contains.params, fileName: 'y.js',
-    functionParams: Object.fromEntries(instrumented.functions.map((fn) => [fn.name, fn.params])),
+    fnName: 'contains',
+    fnLine: 2,
+    params: contains.params,
+    fileName: 'y.js',
+    functionParams: Object.fromEntries(
+      instrumented.functions.map((entry) => [entry.name, entry.params]),
+    ),
     ...mutualResult,
   })
   assert.strictEqual(mutualCache.rootSelect.children.length, 1, 'só chamadas de contains são raiz')

@@ -12,33 +12,41 @@ function isNodeLike(value) {
   return 'val' in value && ('left' in value || 'right' in value || 'next' in value)
 }
 
-function format(value, full, depth = 0, seen = new Set()) {
+function formatPrimitive(value) {
   if (value === null) return 'null'
   if (value === undefined) return 'undefined'
   if (typeof value === 'string') return JSON.stringify(value)
   if (typeof value === 'function') return 'ƒ'
   if (typeof value === 'bigint') return `${value}n`
-  if (typeof value !== 'object') return String(value)
+  return String(value)
+}
+
+function formatObject(value, nextFull, depth, seen) {
+  if (Array.isArray(value)) {
+    const items = value.slice(0, MAX_ITEMS).map((item) => format(item, nextFull, depth + 1, seen))
+    return `[${items.join(', ')}${value.length > MAX_ITEMS ? ', …' : ''}]`
+  }
+  const tag = Object.prototype.toString.call(value)
+  if (tag === '[object Set]') return `Set(${format([...value], nextFull, depth + 1, seen)})`
+  if (tag === '[object Map]') return `Map(${format([...value], nextFull, depth + 1, seen)})`
+  const keys = Object.keys(value)
+  const entries = keys
+    .slice(0, MAX_ITEMS)
+    .map((key) => `${key}: ${format(value[key], nextFull, depth + 1, seen)}`)
+  return `{${entries.join(', ')}${keys.length > MAX_ITEMS ? ', …' : ''}}`
+}
+
+function format(value, full, depth = 0, seen = new Set()) {
+  if (typeof value !== 'object' || value === null) return formatPrimitive(value)
   if (seen.has(value)) return '↺'
-  if (!full && isNodeLike(value)) return `Nó(${format(value.val, false, depth + 1, seen)})`
-  if (depth > 0 && isNodeLike(value)) return `Nó(${format(value.val, false, depth + 1, seen)})`
+  if (isNodeLike(value) && (depth > 0 || !full)) {
+    return `Nó(${format(value.val, false, depth + 1, seen)})`
+  }
   if (depth >= MAX_DEPTH) return Array.isArray(value) ? '[…]' : '{…}'
 
   seen.add(value)
   try {
-    const nextFull = full && depth < MAX_DEPTH
-    if (Array.isArray(value)) {
-      const items = value.slice(0, MAX_ITEMS).map((item) => format(item, nextFull, depth + 1, seen))
-      return `[${items.join(', ')}${value.length > MAX_ITEMS ? ', …' : ''}]`
-    }
-    const tag = Object.prototype.toString.call(value)
-    if (tag === '[object Set]') return `Set(${format([...value], nextFull, depth + 1, seen)})`
-    if (tag === '[object Map]') return `Map(${format([...value], nextFull, depth + 1, seen)})`
-    const keys = Object.keys(value)
-    const entries = keys
-      .slice(0, MAX_ITEMS)
-      .map((key) => `${key}: ${format(value[key], nextFull, depth + 1, seen)}`)
-    return `{${entries.join(', ')}${keys.length > MAX_ITEMS ? ', …' : ''}}`
+    return formatObject(value, full && depth < MAX_DEPTH, depth, seen)
   } finally {
     seen.delete(value)
   }
