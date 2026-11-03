@@ -77,3 +77,15 @@ function renderInspector() {
   if (!state.inspected) return
   elements.inspector.innerHTML = describeNode(state.inspected, state.step)
 }
+
+// "toggle" não borbulha: captura no container para lembrar quais blocos o usuário abriu.
+elements.inspector.addEventListener(
+  'toggle',
+  (event) => {
+    const key = event.target.dataset && event.target.dataset.fold
+    if (!key) return
+    if (event.target.open) state.inspectorOpen.add(key)
+    else state.inspectorOpen.delete(key)
+  },
+  true,
+)

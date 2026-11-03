@@ -105,6 +105,7 @@ const state = {
   playFrom: null,
   view: null,
   inspected: null,
+  inspectorOpen: new Set(),
   zoom: 1,
   treeSize: null,
   viewport: null,
