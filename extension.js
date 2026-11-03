@@ -16,6 +16,7 @@ const PANEL_SCRIPTS = [
   'panel-zoom.js',
   'panel-details.js',
   'panel-inspector.js',
+  'panel-picker.js',
   'panel-tooltip.js',
   'panel.js',
 ]

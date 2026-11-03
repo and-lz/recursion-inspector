@@ -17,6 +17,7 @@ const PANEL_SCRIPTS = [
   'panel-zoom.js',
   'panel-details.js',
   'panel-inspector.js',
+  'panel-picker.js',
   'panel-tooltip.js',
   'panel.js',
 ]
@@ -244,6 +245,10 @@ async function main() {
 
   const cache = loadPanel(payload)
   assert.strictEqual(cache.rootSelect.children.length, 2)
+  assert.strictEqual(cache.rootPicker.hidden, false, 'mais de uma chamada: oferece escolher')
+  assert.strictEqual(cache.app.hidden, true)
+  cache.rootPicker.children[1].listeners.click()
+  assert.strictEqual(cache.rootPicker.hidden, true)
   assert.strictEqual(cache.slider.max, 18)
   cache.slider.value = '1'
   cache.slider.listeners.input()

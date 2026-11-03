@@ -39,6 +39,7 @@ const SUMMARY_HEAD = 20
 const elements = {}
 for (const id of [
   'empty',
+  'rootPicker',
   'app',
   'fnLegend',
   'menu',

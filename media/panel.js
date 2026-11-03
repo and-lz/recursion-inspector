@@ -116,6 +116,7 @@ function load(data) {
   applySettings(data.settings || {})
   state.roots = findRoots(data.events)
   elements.empty.hidden = true
+  elements.rootPicker.hidden = true
   elements.app.hidden = false
   elements.title.textContent = `${data.fnName}(${data.params.join(', ')}) · ${data.fileName}:${data.fnLine}`
 
@@ -129,19 +130,26 @@ function load(data) {
   }
 
   elements.rootSelect.replaceChildren()
-  state.roots.forEach((root, index) => {
+  const labels = state.roots.map((root, index) => {
     const first = data.events[root.startIndex]
-    const last = data.events[root.endIndex]
-    const result = rootResultText(last)
+    const result = rootResultText(data.events[root.endIndex])
+    return `#${index + 1}: ${first.fn}(${first.args.map((arg) => arg.s).join(', ')}) → ${result}`
+  })
+  labels.forEach((label, index) => {
     const option = document.createElement('option')
     option.value = index
-    option.textContent = shorten(
-      `#${index + 1}: ${first.fn}(${first.args.map((arg) => arg.s).join(', ')}) → ${result}`,
-      60,
-    )
+    option.textContent = shorten(label, 60)
     elements.rootSelect.append(option)
   })
-  selectRoot(0)
+  if (state.roots.length === 1) {
+    startRoot(0)
+    return
+  }
+  showRootPicker(labels)
+}
+
+function startRoot(index) {
+  selectRoot(index)
   // Trace grande: animar não ajuda; vai direto ao resultado final.
   if (state.trace.events.length >= MAX_ANIMATED_STEPS || !elements.viewMode.hidden)
     goTo(state.trace.events.length, false)

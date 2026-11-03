@@ -30,6 +30,20 @@ body {
   padding: 24px;
   opacity: 0.7;
 }
+#rootPicker {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+#rootPicker[hidden] {
+  display: none;
+}
+#rootPicker h2 {
+  margin: 0 0 8px;
+  font-size: 1.1em;
+}
 #app {
   display: flex;
   flex-direction: column;
