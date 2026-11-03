@@ -1,24 +1,38 @@
 /* ---------- papel do retorno ---------- */
 
-// Papel de cada retorno na recursão, na ordem em que a classificação testa.
+// Papel de cada retorno na recursão, na ordem em que a classificação testa. `hint` explica,
+// com os valores desta chamada, por que ela recebeu esse papel.
 const RETURN_ROLES = {
-  error: { label: 'erro', hint: 'a chamada lançou uma exceção em vez de retornar.' },
+  error: {
+    label: 'erro',
+    hint: (node) => `${callText(node, 's')} lançou ${node.message} em vez de retornar.`,
+  },
   undefined: {
     label: 'sem retorno',
-    hint: 'a função terminou devolvendo `undefined` (falta um `return`?).',
+    hint: (node) => `${callText(node, 's')} terminou devolvendo undefined (falta um return?).`,
   },
   memo: {
     label: 'memoizado',
-    hint: 'mesmos argumentos de uma chamada anterior que já tinha recursado: veio de cache, sem recursão.',
+    hint: (node) =>
+      `${callText(node, 's')} repete os argumentos de uma chamada anterior que já tinha recursado: devolveu ${node.value.s} do cache, sem recursão.`,
   },
-  base: { label: 'caso base', hint: 'devolveu direto, sem chamar ninguém.' },
+  base: {
+    label: 'caso base',
+    hint: (node) => `devolveu ${node.value.s} direto, sem chamar ninguém.`,
+  },
   propagated: {
     label: 'top-down',
-    hint: 'devolveu o mesmo valor que um dos filhos (escolheu ou repassou), sem montar nada na volta.',
+    hint: (node) => {
+      const source = node.children.find((child) => child.value && child.value.f === node.value.f)
+      return `devolveu ${node.value.s}, o mesmo valor de ${callText(source, 's')}: repassou o resultado do filho sem montar nada na volta.`
+    },
   },
   combined: {
     label: 'bottom-up',
-    hint: 'calculou um valor novo a partir dos filhos (soma, max, &&...), montado na volta.',
+    hint: (node) => {
+      const parts = node.children.map((child) => (child.value ? child.value.s : '✖')).join(', ')
+      return `devolveu ${node.value.s}, montado na volta a partir dos filhos (${parts}).`
+    },
   },
 }
 

@@ -643,7 +643,7 @@ footer {
   line-height: 1.5;
 }
 #inspectorLights {
-  padding: 8px 0 0;
+  margin: 0 auto 0 12px;
   line-height: 0;
 }
 #inspector code {
@@ -661,14 +661,18 @@ footer {
   pointer-events: auto;
 }
 /* Neutra sempre: o id vence as regras de estado do nó (.node.active rect etc.). */
-#tree .node .stateLights > .statePill,
-#inspectorLights .stateLights > .statePill {
+#tree .node .stateLights > .statePill {
   fill: var(--vscode-editor-background);
   stroke: var(--border);
   stroke-width: 1;
   stroke-dasharray: none;
   filter: none;
   animation: none;
+}
+/* No inspetor o farol fica solto, sem fundo nem borda. */
+#inspectorLights .stateLights > .statePill {
+  fill: none;
+  stroke: none;
 }
 .stateSwatch {
   cursor: pointer;
