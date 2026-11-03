@@ -275,6 +275,10 @@ elements.treeWrap.addEventListener(
   },
   { passive: false },
 )
+// Clique no fundo (fora de qualquer nó) fecha o inspetor e tira o destaque do nó inspecionado.
+elements.treeWrap.addEventListener('click', (event) => {
+  if (event.target === elements.treeWrap || event.target === elements.tree) closeInspector()
+})
 elements.zoomReset.addEventListener('click', resetZoom)
 // A orientação e a escala dependem da largura disponível.
 window.addEventListener('resize', () => {
