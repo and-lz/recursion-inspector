@@ -89,12 +89,12 @@ function tipFinals(node, entryValues) {
   return tipFold('finals', 'Ao sair', `${rows.length} mudaram`, rows.join(''))
 }
 
-// Valor devolvido e o papel dele na recursão; a explicação já cita o `return` com o nome devolvido.
+// Valor devolvido e o papel dele na recursão, em uma linha (o `return` fica no fim de Testes).
 function tipReturn(node) {
   const value = `<div class="tipResult">${highlight(prettyValue(node.value.f, 24))}</div>`
   const role = RETURN_ROLES[node.role]
   if (!role) return value
-  return `${value}<div class="tipRole"><b>${role.label}</b><p>${role.hint(node)}</p></div>`
+  return `${value}<div class="tipRole"><b>${role.label}</b><p>${role.brief ? role.brief(node) : role.hint(node)}</p></div>`
 }
 
 function tipOutcome(node, stateName) {
