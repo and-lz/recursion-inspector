@@ -1108,3 +1108,11 @@ code,
   text-align: right;
   opacity: 0.6;
 }
+.srcLine code {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  word-break: normal;
+}
