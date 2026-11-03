@@ -119,7 +119,7 @@ function describeEdgeValue(node, step) {
   const value = `<pre class="tipValue">${highlight(prettify(node.value.f))}</pre>`
   const role = RETURN_ROLES[node.role]
   const final = node.parent ? '' : ' Resposta final da execução.'
-  const note = `<div class="tipNote"><b>${role.label}</b>: ${role.hint(node)}${final}</div>`
+  const note = `<div class="tipNote"><b>${role.label}</b>: ${role.brief ? role.brief(node) : role.hint(node)}${final}</div>`
   return head + tipSection('Retorno', value + note)
 }
 
