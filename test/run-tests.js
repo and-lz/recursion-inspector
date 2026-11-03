@@ -214,7 +214,41 @@ walk({ val: 1, left: { val: 2, left: null, right: null }, right: null }, [[1, 0]
   )
 }
 
+function testRecursionKinds() {
+  const source = `
+function fib(n) { if (n < 2) return n; return fib(n - 1) + fib(n - 2) }
+function fact(n, acc = 1) { if (n === 0) return acc; return fact(n - 1, acc * n) }
+function preorder(node) { if (!node) return; visit(node.val); preorder(node.left); preorder(node.right) }
+function inorder(node) { if (!node) return; inorder(node.left); visit(node.val); inorder(node.right) }
+function postorder(node) { if (!node) return; postorder(node.left); postorder(node.right); visit(node.val) }
+function inorderList(node) { if (!node) return []; return [...inorderList(node.left), node.val, ...inorderList(node.right)] }
+function isEven(n) { return n === 0 ? true : isOdd(n - 1) }
+function isOdd(n) { return n === 0 ? false : isEven(n - 1) }
+`
+  const kinds = Object.fromEntries(
+    findRecursiveFunctions(source).map((fn) => [fn.name, fn.recursion]),
+  )
+  assert.deepStrictEqual(kinds.fib, {
+    shape: 'binária',
+    tail: false,
+    direction: 'bottom-up',
+    orders: ['pós-ordem'],
+  })
+  assert.deepStrictEqual(kinds.fact, {
+    shape: 'linear',
+    tail: true,
+    direction: 'top-down',
+    orders: [],
+  })
+  assert.deepStrictEqual(kinds.preorder.orders, ['pré-ordem'])
+  assert.deepStrictEqual(kinds.inorder.orders, ['em ordem'])
+  assert.deepStrictEqual(kinds.postorder.orders, ['pós-ordem'])
+  assert.deepStrictEqual(kinds.inorderList.orders, ['em ordem', 'pós-ordem'])
+  assert.strictEqual(kinds.isEven.shape, 'mútua')
+}
+
 async function main() {
+  testRecursionKinds()
   await testFib()
   await testProbes()
   await testSameTree()

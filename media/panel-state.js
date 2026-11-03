@@ -60,6 +60,7 @@ for (const id of [
   'explain',
   'returns',
   'title',
+  'kinds',
   'rootSelect',
   'modeSelect',
   'explainText',

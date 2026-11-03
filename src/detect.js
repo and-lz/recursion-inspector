@@ -1,6 +1,7 @@
 const acorn = require('acorn')
 const walk = require('acorn-walk')
 const { returnPicks } = require('./return-picks')
+const { classifyRecursion } = require('./classify')
 
 function parse(source) {
   return acorn.parse(source, {
@@ -236,6 +237,7 @@ function describe(source, name, fnNode, declNode, idNode, kind) {
         : null,
     params: fnNode.params.map((param) => paramLabel(source, param)),
     probes: collectProbes(source, fnNode),
+    recursion: classifyRecursion(source, fnNode, name),
   }
 }
 

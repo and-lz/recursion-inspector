@@ -119,6 +119,7 @@ function load(data) {
   elements.empty.hidden = true
   elements.rootPicker.hidden = true
   elements.app.hidden = false
+  renderKinds(data.recursion)
   elements.title.textContent = `${data.fnName}(${data.params.join(', ')}) · ${data.fileName}:${data.fnLine}`
 
   if (!state.roots.length) {
