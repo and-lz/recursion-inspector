@@ -266,7 +266,7 @@ function describeNode(node, step) {
     stateName === 'error' ? tipSection('Erro', escapeHtml(node.message), 'failed') : '',
   ]
   return [
-    `<header class="tipHead">${code(callText(node, 'f'))}<span class="tipState ${stateName}">${STATE_LABELS[stateName]}</span></header>`,
+    `<header class="tipHead"><span class="tipFn">${escapeHtml(node.fn)}</span><span class="tipState ${stateName}">${STATE_LABELS[stateName]}</span></header>`,
     `<div class="tipMeta">${meta.join(' · ')}</div>`,
     ...sections,
     tipChildren(node, step),

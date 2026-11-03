@@ -761,3 +761,7 @@ code,
 .tok-call {
   color: var(--dracula-call);
 }
+.tipFn {
+  font-family: var(--vscode-editor-font-family);
+  color: var(--dracula-call);
+}
