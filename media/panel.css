@@ -156,15 +156,6 @@ select:hover {
 .exTitle.error {
   border-color: var(--error);
 }
-.exCode {
-  margin: 0 0 8px;
-  padding: 6px 8px;
-  overflow-x: auto;
-  font-family: var(--vscode-editor-font-family, monospace);
-  font-size: 12px;
-  background: var(--vscode-textCodeBlock-background, rgba(127, 127, 127, 0.15));
-  border-radius: var(--radius);
-}
 .exRow {
   margin: 0 0 8px;
   padding-top: 6px;
