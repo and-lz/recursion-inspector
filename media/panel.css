@@ -1070,6 +1070,14 @@ code,
   padding-top: 0;
   border-top: none;
 }
-#inspector .tipSection .tipRole {
-  margin: 10px 0 0;
+#inspector .tipRole {
+  margin-top: 10px;
+}
+#inspector .tipRole b {
+  font-size: 12px;
+}
+#inspector .tipRole p {
+  margin: 2px 0 0;
+  font-size: 11px;
+  line-height: 1.5;
 }

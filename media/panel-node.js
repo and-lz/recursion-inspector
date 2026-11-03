@@ -94,7 +94,7 @@ function tipReturn(node) {
   const value = `<div class="tipResult">${highlight(prettyValue(node.value.f, 24))}</div>`
   const role = RETURN_ROLES[node.role]
   if (!role) return value
-  return `${value}<div class="tipNote tipRole"><b>${role.label}</b>: ${role.hint(node)}</div>`
+  return `${value}<div class="tipRole"><b>${role.label}</b><p>${role.hint(node)}</p></div>`
 }
 
 function tipOutcome(node, stateName) {
