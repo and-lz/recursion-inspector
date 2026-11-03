@@ -11,7 +11,7 @@
           },
           {
             "type": "command",
-            "command": "git add -A && { git diff --cached --quiet || git commit -q -m \"Atualização automática ao fim do chat\"; } >/dev/null 2>&1; git push >/dev/null 2>&1 || true",
+            "command": "sh .claude/auto-commit.sh >/dev/null 2>&1; git push >/dev/null 2>&1 || true",
             "timeout": 120,
             "statusMessage": "Commit e push..."
           }
