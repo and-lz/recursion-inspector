@@ -1,16 +1,16 @@
 :root {
-  --code-string: #98c379;
-  --code-number: #d19a66;
-  --code-literal: #d19a66;
-  --code-keyword: #c678dd;
-  --code-call: #61afef;
-  --active: #4c8dff;
-  --waiting: #e0a526;
-  --done: #4cb36b;
-  --error: #f0545a;
-  --role-propagated: #3ec5d6;
-  --role-combined: #b886f0;
-  --role-memo: #ee7fb4;
+  --code-string: #aed095;
+  --code-number: #e2c09f;
+  --code-literal: #e2c09f;
+  --code-keyword: #e1b7ed;
+  --code-call: #99cbf5;
+  --active: #a8c7ff;
+  --waiting: #e9c067;
+  --done: #97d3a9;
+  --error: #f8b4b7;
+  --role-propagated: #6ed4e0;
+  --role-combined: #d7baf6;
+  --role-memo: #f5b3d2;
   --radius: 8px;
   --border: var(--vscode-panel-border, rgba(128, 128, 128, 0.3));
   --surface: color-mix(in srgb, var(--vscode-foreground) 5%, var(--vscode-editor-background));
@@ -32,7 +32,6 @@ body {
 }
 #empty {
   padding: 24px;
-  opacity: 0.7;
 }
 #rootPicker {
   padding: 24px;
@@ -133,7 +132,6 @@ button:hover {
 }
 #summary {
   margin-top: 6px;
-  opacity: 0.85;
 }
 #legend[hidden] {
   display: none;
@@ -162,13 +160,11 @@ button:hover {
   text-transform: uppercase;
   letter-spacing: 0.06em;
   font-size: 10px;
-  opacity: 0.55;
 }
 .chip {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  opacity: 0.9;
 }
 .chip::before {
   content: '';
@@ -258,7 +254,6 @@ aside h2 {
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  opacity: 0.6;
   margin: 14px 0 6px;
 }
 aside h2 small {
@@ -308,7 +303,6 @@ aside h2 small {
   font-weight: bold;
 }
 .frame small {
-  opacity: 0.6;
   margin-left: 6px;
 }
 .var {
@@ -323,15 +317,15 @@ aside h2 small {
   border-radius: 4px;
   white-space: nowrap;
   cursor: pointer;
-  opacity: 0.35;
+  font-style: italic;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 .row.past {
-  opacity: 0.9;
+  font-style: normal;
 }
 .row.current {
-  opacity: 1;
+  font-style: normal;
   background: var(--vscode-list-activeSelectionBackground);
   color: var(--vscode-list-activeSelectionForeground);
 }
@@ -369,7 +363,7 @@ footer {
 }
 #tree .paramName {
   font-size: 9px;
-  fill: var(--vscode-descriptionForeground, var(--vscode-editor-foreground));
+  fill: var(--vscode-editor-foreground);
 }
 #tree .paramBadge {
   fill: var(--vscode-editor-foreground);
@@ -380,7 +374,6 @@ footer {
 }
 #tree .ret {
   font-size: 10px;
-  opacity: 0.85;
 }
 .node {
   cursor: pointer;
@@ -403,12 +396,12 @@ footer {
 }
 .node.active rect {
   stroke: var(--active);
-  fill: color-mix(in srgb, var(--active) 28%, var(--vscode-editor-background));
+  fill: color-mix(in srgb, var(--active) 14%, var(--vscode-editor-background));
   stroke-width: 2.5;
 }
 .node.waiting rect {
   stroke: var(--waiting);
-  fill: color-mix(in srgb, var(--waiting) 14%, var(--vscode-editor-background));
+  fill: color-mix(in srgb, var(--waiting) 10%, var(--vscode-editor-background));
 }
 .node.done rect {
   stroke: color-mix(in srgb, var(--done) 70%, transparent);
@@ -416,12 +409,12 @@ footer {
 }
 .node.returning rect {
   stroke: var(--done);
-  fill: color-mix(in srgb, var(--done) 32%, var(--vscode-editor-background));
+  fill: color-mix(in srgb, var(--done) 14%, var(--vscode-editor-background));
   stroke-width: 2.5;
 }
 .node.error rect {
   stroke: var(--error);
-  fill: color-mix(in srgb, var(--error) 22%, var(--vscode-editor-background));
+  fill: color-mix(in srgb, var(--error) 12%, var(--vscode-editor-background));
 }
 .node.base.done rect,
 .node.base.returning rect {
@@ -429,7 +422,7 @@ footer {
 }
 .edge {
   fill: none;
-  stroke: color-mix(in srgb, var(--vscode-foreground) 28%, transparent);
+  stroke: color-mix(in srgb, var(--vscode-foreground) 60%, transparent);
   stroke-width: 1.5;
   stroke-linecap: round;
   transition: opacity 0.25s;
@@ -506,7 +499,6 @@ footer {
 #returns .label {
   font-size: 11px;
   text-transform: uppercase;
-  opacity: 0.7;
   white-space: nowrap;
 }
 #returnChips {
@@ -619,7 +611,6 @@ footer {
   background: none;
   color: inherit;
   cursor: pointer;
-  opacity: 0.7;
 }
 #inspectorClose:hover {
   opacity: 1;
@@ -735,7 +726,6 @@ footer {
 .tipMeta {
   margin-top: 4px;
   font-size: 11px;
-  opacity: 0.6;
 }
 .tipSection {
   margin-top: 10px;
@@ -748,7 +738,6 @@ footer {
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  opacity: 0.55;
 }
 .tipRow {
   display: grid;
@@ -775,7 +764,6 @@ footer {
   margin-top: 0;
 }
 .tipCond ~ .tipRow {
-  opacity: 0.7;
   padding-left: 10px;
 }
 .tipCond code .term {
@@ -825,10 +813,8 @@ footer {
 .tipNote {
   margin-top: 10px;
   font-size: 11px;
-  opacity: 0.6;
 }
 .var.cond {
-  opacity: 0.8;
 }
 #tree {
   display: block;
@@ -871,12 +857,20 @@ aside[hidden] {
   }
 }
 
-body.vscode-light {
-  --code-string: #50a14f;
-  --code-number: #986801;
-  --code-literal: #986801;
-  --code-keyword: #a626a4;
-  --code-call: #4078f2;
+body.vscode-light,
+body.vscode-high-contrast-light {
+  --active: #003da8;
+  --waiting: #5b420d;
+  --done: #214f2f;
+  --error: #8d0c11;
+  --role-propagated: #124d55;
+  --role-combined: #5f16b0;
+  --role-memo: #87124a;
+  --code-string: #354d23;
+  --code-number: #623f1d;
+  --code-literal: #623f1d;
+  --code-keyword: #6f2286;
+  --code-call: #0c497a;
 }
 code,
 .tipValue {
@@ -915,7 +909,6 @@ code,
 .tipSection .tipNote {
   margin: 0 0 10px;
   font-size: 12px;
-  opacity: 0.7;
 }
 .tipSection .tipResult {
   margin: 0;
