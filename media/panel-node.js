@@ -23,14 +23,27 @@ function tipFold(key, label, count, body) {
   return `<details class="tipFold" data-fold="${key}"${open}><summary>${label}<small>${count}</small></summary>${body}</details>`
 }
 
-function tipConditions(node, step) {
-  return condsAt(node, step)
-    .map((cond) => {
-      const operands = (cond.operands || []).map((operand) => tipRow(operand.src, operand.v.f))
-      const verdict = cond.result ? 'verdadeiro' : 'falso'
-      return `<div class="tipCond"><code>${highlightTerms(cond)}</code><span class="tipPill ${cond.result ? 'yes' : 'no'}">${verdict}</span></div>${operands.join('')}`
-    })
-    .join('')
+// Teste que decidiu o retorno: o último verdadeiro; sem nenhum, o código seguiu até o return final.
+function decisiveCond(conds) {
+  return [...conds].reverse().find((cond) => cond.result) || null
+}
+
+function tipVerdict(conds, decisive) {
+  if (!decisive) return 'nenhum teste foi verdadeiro: seguiu direto até o retorno acima'
+  return `${code(shorten(decisive.src, 60))} foi verdadeiro: levou ao retorno acima`
+}
+
+function tipConditions(node, step, returned) {
+  const conds = condsAt(node, step)
+  const decisive = returned ? decisiveCond(conds) : null
+  const rows = conds.map((cond) => {
+    const operands = (cond.operands || []).map((operand) => tipRow(operand.src, operand.v.f))
+    const verdict = cond.result ? 'verdadeiro' : 'falso'
+    const mark = cond === decisive ? ' decisive' : ''
+    return `<div class="tipCond${mark}"><code>${highlightTerms(cond)}</code><span class="tipPill ${cond.result ? 'yes' : 'no'}">${verdict}</span></div>${operands.join('')}`
+  })
+  if (returned) rows.push(`<div class="tipNote tipWhy">→ ${tipVerdict(conds, decisive)}</div>`)
+  return rows.join('')
 }
 
 function tipChildren(node, step) {
@@ -86,7 +99,7 @@ function describeNode(node, step) {
   const conditions = condsAt(node, step)
   const folds = [
     conditions.length
-      ? tipFold('conds', 'Testes', conditions.length, tipConditions(node, step))
+      ? tipFold('conds', 'Testes', conditions.length, tipConditions(node, step, returned))
       : '',
     entry.length
       ? tipFold(

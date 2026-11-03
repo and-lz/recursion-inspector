@@ -1009,3 +1009,13 @@ code,
 .tipFold[open] > summary {
   margin-bottom: 8px;
 }
+.tipCond.decisive {
+  padding: 2px 6px;
+  margin-left: -6px;
+  border-left: 2px solid var(--done);
+  background: color-mix(in srgb, var(--done) 8%, transparent);
+}
+.tipSection .tipWhy,
+.tipFold .tipWhy {
+  margin: 10px 0 0;
+}
