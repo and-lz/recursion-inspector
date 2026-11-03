@@ -42,12 +42,12 @@ function probeEdits(fn) {
           rank: SUFFIX_RANK + probe.seq,
         },
       ]
-    if (probe.type === 'term')
+    if (probe.type === 'term' || probe.type === 'pick')
       return [
         {
           from: probe.start,
           to: probe.start,
-          text: `__term(${probe.from}, ${probe.to}, ${probe.line}, (`,
+          text: `__${probe.type}(${probe.from}, ${probe.to}, ${probe.line}, (`,
           rank: PREFIX_RANK - probe.seq,
         },
         { from: probe.end, to: probe.end, text: '))', rank: SUFFIX_RANK + probe.seq },

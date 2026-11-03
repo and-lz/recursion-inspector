@@ -150,11 +150,28 @@ console.log(isEven(4), contains({ l: null, r: { l: null, r: null } }, { l: null,
   )
 }
 
+async function testPick() {
+  const source = `function pick(left, right, depth = 0) {
+  if (depth === 2) return null
+  const inner = pick(left, right, depth + 1)
+  return inner ? inner : left || right
+}
+console.log(pick(0, 5))
+`
+  const [fn] = findRecursiveFunctions(source)
+  const result = await runTrace(instrument(source, fn.start).code)
+  assert.strictEqual(result.error, null)
+  const finals = result.probes.filter((probe) => probe.kind === 'final' && probe.pick)
+  const picked = finals.map((probe) => probe.src.slice(probe.pick.from, probe.pick.to))
+  assert.deepStrictEqual(picked, ['right', 'inner'])
+}
+
 async function main() {
   await testFib()
   await testProbes()
   await testSameTree()
   await testMutual()
+  await testPick()
   console.log('OK')
 }
 

@@ -84,6 +84,14 @@ function code(text) {
   return `<code>${highlight(text)}</code>`
 }
 
+// `return ...` com em negrito o trecho que de fato foi devolvido (return com ?: ou ||, &&).
+function returnCode(node) {
+  const pick = node.returnPick
+  if (!pick) return code(`return ${node.returnSrc}`)
+  const { returnSrc } = node
+  return `<code>${highlight('return ')}${highlight(returnSrc.slice(0, pick.from))}<b class="pick">${highlight(returnSrc.slice(pick.from, pick.to))}</b>${highlight(returnSrc.slice(pick.to))}</code>`
+}
+
 function shorten(text, max) {
   return text.length > max ? `${text.slice(0, max - 1)}…` : text
 }
@@ -133,6 +141,7 @@ function attachProbes(nodes, startIndex) {
     if (probe.kind === 'final') {
       node.finals = probe.vars
       node.returnSrc = probe.src
+      node.returnPick = probe.pick
     } else if (probe.kind === 'var') node.locals.push({ name: probe.name, v: probe.v, at })
     else
       node.conds.push({
@@ -198,6 +207,7 @@ function buildTrace(root) {
         locals: [],
         finals: null,
         returnSrc: null,
+        returnPick: null,
         conds: [],
       }
       if (node.parent) node.parent.children.push(node)

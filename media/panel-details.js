@@ -234,7 +234,7 @@ function tipFinals(node, entryValues) {
 function tipReturn(node) {
   const value = `<div class="tipResult">${highlight(node.value.f)}</div>`
   if (!node.returnSrc || node.returnSrc === node.value.f) return value
-  return `<div class="tipNote">${code(`return ${node.returnSrc}`)}</div>${value}`
+  return `<div class="tipNote">${returnCode(node)}</div>${value}`
 }
 
 function describeNode(node, step) {

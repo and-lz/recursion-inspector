@@ -662,6 +662,10 @@ header {
 .tipCond code .term.no {
   color: var(--error);
 }
+.tipNote code .pick {
+  font-weight: 700;
+  color: var(--done);
+}
 .tipPill {
   flex: none;
   padding: 0 8px;

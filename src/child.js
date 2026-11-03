@@ -66,6 +66,26 @@ function callerLine(stack) {
 
 // `where()` devolve a chamada em andamento (ou null quando não dá para registrar).
 // As funções devolvem o valor recebido: o programa do usuário não pode mudar de comportamento.
+// Folhas de um `return` condicional: a última avaliada antes do `__final` é o valor devolvido.
+function createPickHooks(where) {
+  const pendingPicks = new Map()
+
+  function __pick(from, to, line, value) {
+    const position = where()
+    if (position) pendingPicks.set(position.id, { from, to })
+    return value
+  }
+
+  function takePick() {
+    const position = where()
+    const pick = (position && pendingPicks.get(position.id)) || null
+    if (position) pendingPicks.delete(position.id)
+    return pick
+  }
+
+  return { __pick, takePick }
+}
+
 function createProbeHooks(probes, where) {
   function add(probe) {
     const position = probes.length < PROBE_LIMIT && where()
@@ -103,6 +123,8 @@ function createProbeHooks(probes, where) {
     return value
   }
 
+  const { __pick, takePick } = createPickHooks(where)
+
   function __cond(src, line, value) {
     const position = where()
     const operands = (position && pending.get(position.id)) || []
@@ -119,9 +141,11 @@ function createProbeHooks(probes, where) {
   // Local ainda na zona morta temporal (declarado depois do return) fica de fora.
   function __final(...args) {
     const [entries, src] = args.length > 1 ? args.slice(1) : [args[0], null]
+    const pick = takePick()
     add(() => ({
       kind: 'final',
       src,
+      pick,
       vars: entries.flatMap(([name, read]) => {
         try {
           return [{ name, v: snapshot(read()) }]
@@ -133,7 +157,7 @@ function createProbeHooks(probes, where) {
     return args.length > 1 ? args[0] : undefined
   }
 
-  return { __var, __cond, __operand, __term, __final }
+  return { __var, __cond, __operand, __term, __pick, __final }
 }
 
 function run(code) {
@@ -176,7 +200,7 @@ function run(code) {
     }
   }
 
-  const { __var, __cond, __operand, __term, __final } = createProbeHooks(probes, () =>
+  const hooks = createProbeHooks(probes, () =>
     truncated || stack.length === 0 ? null : { id: stack[stack.length - 1], at: events.length },
   )
 
@@ -185,11 +209,7 @@ function run(code) {
   }
   const sandbox = {
     __call,
-    __var,
-    __cond,
-    __operand,
-    __term,
-    __final,
+    ...hooks,
     structuredClone,
     console: { log, info: log, warn: log, error: log, debug: log },
   }

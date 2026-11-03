@@ -1,5 +1,6 @@
 const acorn = require('acorn')
 const walk = require('acorn-walk')
+const { returnPicks } = require('./return-picks')
 
 function parse(source) {
   return acorn.parse(source, {
@@ -183,6 +184,8 @@ function collectProbes(source, fnNode) {
     Function: skipNestedFunction,
     ReturnStatement(node, state, visit) {
       addFinal.atReturn(node)
+      for (const leaf of returnPicks(node.argument))
+        add('pick', leaf, { from: leaf.from, to: leaf.to })
       if (node.argument) visit(node.argument, state, 'Expression')
     },
     VariableDeclarator(node, state, visit) {

@@ -118,7 +118,7 @@ function describeEdgeValue(node, step) {
   if (stateName !== 'done' && stateName !== 'returning') return ''
   const source =
     node.returnSrc && node.returnSrc !== node.value.f
-      ? `<div class="tipNote">${code(`return ${node.returnSrc}`)}</div>`
+      ? `<div class="tipNote">${returnCode(node)}</div>`
       : ''
   const value = `<pre class="tipValue">${highlight(prettify(node.value.f))}</pre>`
   return head + tipSection('Retorno', source + value)
