@@ -36,7 +36,7 @@ function renderKinds(recursion) {
       const chip = document.createElement('span')
       chip.className = 'chip kind'
       chip.textContent = kind.label
-      chip.title = kind.hint
+      chip.title = kind.hint.replaceAll('`', '')
       return chip
     }),
   )
@@ -49,7 +49,7 @@ function renderKinds(recursion) {
     ...kinds.map((kind) => {
       const chip = document.createElement('span')
       chip.className = 'chip kind'
-      chip.textContent = `${kind.label}: ${kind.hint}`
+      chip.innerHTML = `${escapeHtml(kind.label)}: ${withCode(kind.hint)}`
       return chip
     }),
   )

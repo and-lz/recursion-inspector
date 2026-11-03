@@ -126,6 +126,14 @@ function code(text) {
   return `<code>${highlight(text)}</code>`
 }
 
+// Texto com trechos entre crases (`assim`) vira HTML com esses trechos como código colorido.
+function withCode(text) {
+  return String(text)
+    .split('`')
+    .map((part, index) => (index % 2 ? `<code>${highlight(part)}</code>` : escapeHtml(part)))
+    .join('')
+}
+
 // `return ...` com em negrito o trecho que de fato foi devolvido (return com ?: ou ||, &&).
 function returnCode(node) {
   const pick = node.returnPick
