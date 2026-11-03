@@ -579,6 +579,13 @@ header {
 .stateSwatch:hover rect {
   fill: var(--swatch);
 }
+.stateSwatch.disabled {
+  cursor: default;
+  opacity: 0.35;
+}
+.stateSwatch.disabled:hover rect {
+  fill: color-mix(in srgb, var(--swatch) 55%, var(--vscode-editor-background));
+}
 .stateSwatch.active {
   --swatch: var(--active);
 }

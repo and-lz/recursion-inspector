@@ -71,17 +71,18 @@ function buildInspectButton(node, nodeWidth) {
   return button
 }
 
-// Passo em que o nó está em cada estado; folha nunca espera filhos.
+// Passo em que o nó está em cada estado; folha nunca espera filhos (step null, selo apagado).
 function stateSteps(node) {
+  const [firstChild] = node.children
   return [
     { name: 'active', label: 'chamando agora', step: node.callIndex + 1 },
-    node.children.length && {
+    {
       name: 'waiting',
-      label: 'esperando os filhos',
-      step: node.children[0].callIndex + 1,
+      label: firstChild ? 'esperando os filhos' : 'esperando os filhos (sem filhos)',
+      step: firstChild ? firstChild.callIndex + 1 : null,
     },
     { name: 'done', label: 'já retornou', step: node.endIndex + 1 },
-  ].filter(Boolean)
+  ]
 }
 
 // Três selos na borda de baixo, visíveis só no hover; cada um pula direto para aquele estado.
@@ -91,7 +92,7 @@ function buildStatePicker(node, nodeWidth) {
   const startX = (nodeWidth - steps.length * STATE_SWATCH_WIDTH - (steps.length - 1) * 4) / 2
   steps.forEach((entry, index) => {
     const swatch = svg('g', {
-      class: `stateSwatch ${entry.name}`,
+      class: `stateSwatch ${entry.name}${entry.step === null ? ' disabled' : ''}`,
       transform: `translate(${startX + index * (STATE_SWATCH_WIDTH + 4)},${node.height - 5})`,
     })
     const title = svg('title')
@@ -99,6 +100,7 @@ function buildStatePicker(node, nodeWidth) {
     swatch.append(title, svg('rect', { width: STATE_SWATCH_WIDTH, height: 10, rx: 3 }))
     swatch.addEventListener('click', (event) => {
       event.stopPropagation()
+      if (entry.step === null) return
       goTo(entry.step, true)
     })
     picker.append(swatch)
