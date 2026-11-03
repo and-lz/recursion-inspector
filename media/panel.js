@@ -12,6 +12,7 @@ function render(previousStep) {
   renderStack(focus, lastEvent)
   renderVars(focus, lastEvent, step)
   renderLog(previousStep, step)
+  renderInspector()
   refreshTooltip()
 
   elements.slider.value = step
@@ -79,6 +80,7 @@ function togglePlay() {
 
 function selectRoot(index) {
   pause()
+  closeInspector()
   const trace = buildTrace(state.roots[index])
   state.trace = trace
   state.step = 0
@@ -179,6 +181,38 @@ document.addEventListener('click', (event) => {
 
 elements.rootSelect.addEventListener('change', () => selectRoot(Number(elements.rootSelect.value)))
 elements.slider.addEventListener('input', () => goTo(Number(elements.slider.value), true))
+
+const MIN_PANE_WIDTH = 200
+const MIN_TREE_WIDTH = 200
+
+// Arrastar a borda esquerda do painel muda a largura dele.
+function makeResizable(handle, pane) {
+  handle.addEventListener('pointerdown', (event) => {
+    event.preventDefault()
+    const startX = event.clientX
+    const startWidth = pane.offsetWidth
+    const maxWidth = () => window.innerWidth - MIN_TREE_WIDTH
+    handle.setPointerCapture(event.pointerId)
+    handle.classList.add('dragging')
+    const move = (moveEvent) => {
+      const width = startWidth + startX - moveEvent.clientX
+      pane.style.width = `${Math.max(MIN_PANE_WIDTH, Math.min(width, maxWidth()))}px`
+    }
+    const stop = () => {
+      handle.classList.remove('dragging')
+      handle.removeEventListener('pointermove', move)
+      handle.removeEventListener('pointerup', stop)
+      handle.removeEventListener('pointercancel', stop)
+    }
+    handle.addEventListener('pointermove', move)
+    handle.addEventListener('pointerup', stop)
+    handle.addEventListener('pointercancel', stop)
+  })
+}
+makeResizable(elements.sidebarResizer, elements.sidebar)
+makeResizable(elements.inspectorResizer, elements.inspectorBox)
+
+elements.inspectorClose.addEventListener('click', closeInspector)
 elements.play.addEventListener('click', togglePlay)
 elements.modeSelect.addEventListener('change', onTimingChange)
 elements.first.addEventListener('click', () => goTo(0, true))

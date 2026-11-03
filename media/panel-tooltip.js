@@ -5,7 +5,7 @@ const TOOLTIP_MARGIN = 8
 
 const tooltip = { node: null, source: null, describe: null }
 
-function attachTooltip(element, node, describe = describeNode) {
+function attachTooltip(element, node, describe = describeNodeBrief) {
   element.addEventListener('mouseenter', (event) => showTooltip(node, describe, event))
   element.addEventListener('mousemove', moveTooltip)
   element.addEventListener('mouseleave', hideTooltip)

@@ -192,6 +192,7 @@ const STATE_LABELS = {
   returning: 'acabou de retornar',
   done: 'já retornou',
   error: 'lançou erro',
+  hidden: 'ainda não chamada',
 }
 
 function tipSection(label, body, className = '') {

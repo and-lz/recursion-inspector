@@ -50,7 +50,18 @@
       </div>
       <main>
         <div id="treeWrap"><svg id="tree"></svg></div>
+        <aside id="inspectorBox" hidden>
+          <div class="resizer" id="inspectorResizer"></div>
+          <h2>
+            Inspetor
+            <button id="inspectorClose" title="Fechar inspetor" aria-label="Fechar inspetor">
+              ✕
+            </button>
+          </h2>
+          <div id="inspector"></div>
+        </aside>
         <aside id="sidebar">
+          <div class="resizer" id="sidebarResizer"></div>
           <h2>Pilha de chamadas <small>(topo = quem está executando)</small></h2>
           <div id="stack"></div>
           <h2>Variáveis desta chamada</h2>

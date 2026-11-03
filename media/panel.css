@@ -179,7 +179,10 @@ main {
   background-size: 20px 20px;
 }
 aside {
+  position: relative;
+  flex: none;
   width: 340px;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -506,6 +509,66 @@ header {
 #tooltip[hidden] {
   display: none;
 }
+#inspectorBox h2 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+#inspectorClose {
+  padding: 0 6px;
+  border: none;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+  opacity: 0.7;
+}
+#inspectorClose:hover {
+  opacity: 1;
+}
+.resizer {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -3px;
+  z-index: 5;
+  width: 6px;
+  cursor: col-resize;
+}
+.resizer:hover,
+.resizer.dragging {
+  background: var(--active);
+  opacity: 0.6;
+}
+#inspector {
+  flex: 1;
+  overflow: auto;
+  padding-bottom: 8px;
+  font-size: 12px;
+  line-height: 1.5;
+}
+#inspector code {
+  font-family: var(--vscode-editor-font-family);
+  word-break: break-all;
+}
+.inspectBtn {
+  opacity: 0;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.node:hover .inspectBtn {
+  opacity: 1;
+}
+.inspectBtn circle {
+  fill: var(--active);
+  stroke: var(--vscode-editor-background);
+  stroke-width: 1.5;
+}
+.inspectBtn text {
+  fill: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  text-anchor: middle;
+}
 #tooltip code {
   font-family: var(--vscode-editor-font-family);
   word-break: break-all;
@@ -640,4 +703,10 @@ header {
 #tree {
   display: block;
   margin: 0 auto;
+}
+aside[hidden] {
+  display: none;
+}
+#inspectorBox {
+  border-left: 1px solid var(--border);
 }

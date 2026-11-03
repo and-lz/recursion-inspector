@@ -56,6 +56,21 @@ function layout(trace) {
   }
 }
 
+// Selo no canto do nó, visível só no hover; abre o inspetor na lateral.
+function buildInspectButton(node, nodeWidth) {
+  const button = svg('g', { class: 'inspectBtn', transform: `translate(${nodeWidth - 4},0)` })
+  const title = svg('title')
+  title.textContent = 'Inspecionar na lateral'
+  const label = svg('text', { y: 4 })
+  label.textContent = 'i'
+  button.append(title, svg('circle', { r: 8 }), label)
+  button.addEventListener('click', (event) => {
+    event.stopPropagation()
+    openInspector(node)
+  })
+  return button
+}
+
 function buildNodeElement(node, nodeWidth, nodeLayer) {
   node.isBase = node.children.length === 0
   node.height = node.kind === 'throw' ? NODE_HEIGHT : COMPACT_HEIGHT
@@ -73,6 +88,7 @@ function buildNodeElement(node, nodeWidth, nodeLayer) {
   label.textContent = shorten(argsText(node, 's'), MAX_ARGS)
   node.retText = svg('text', { x: 22, y: 31, class: 'ret' })
   node.element.append(label, node.retText)
+  node.element.append(buildInspectButton(node, nodeWidth))
   attachTooltip(node.element, node)
   node.element.addEventListener('click', () => goTo(node.callIndex + 1, true))
   nodeLayer.append(node.element)

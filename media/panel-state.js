@@ -38,6 +38,11 @@ for (const id of [
   'treeWrap',
   'returnChips',
   'stack',
+  'inspectorBox',
+  'inspector',
+  'inspectorClose',
+  'inspectorResizer',
+  'sidebarResizer',
   'vars',
   'log',
   'tooltip',
@@ -61,6 +66,7 @@ const state = {
   timer: null,
   playFrom: null,
   view: null,
+  inspected: null,
 }
 
 function ordinal(index) {
