@@ -73,10 +73,14 @@ function relayoutTree() {
   placeTree(state.trace)
 }
 
+// Sempre leva o viewport ao último nó do passo atual (a raiz, se nada rodou ainda).
 function resetZoom() {
-  if (!state.viewport || state.zoom === 1) return
+  if (!state.viewport) return
   const wasCompact = isCompact()
   state.zoom = 1
   if (wasCompact) relayoutTree()
   else applyZoom()
+  const lastEvent = state.step > 0 ? state.trace.events[state.step - 1] : null
+  const node = lastEvent ? state.trace.nodes.get(lastEvent.id) : state.trace.rootNode
+  node.element.scrollIntoView({ block: 'center', inline: 'center' })
 }
