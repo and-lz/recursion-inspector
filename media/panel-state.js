@@ -27,6 +27,7 @@ const FN_COLORS = ['#3b82f6', '#c084fc', '#f97316', '#14b8a6', '#ec4899', '#a3a3
 const EXPLAINED_DELAY_MS = 1400
 const COMPACT_MAX_DELAY_MS = 250
 const COMPACT_TOTAL_MS = 2000
+const MAX_ANIMATED_STEPS = 100
 
 const elements = {}
 for (const id of [

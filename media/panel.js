@@ -138,7 +138,9 @@ function load(data) {
     elements.rootSelect.append(option)
   })
   selectRoot(0)
-  play()
+  // Trace grande: animar não ajuda; vai direto ao resultado final.
+  if (state.trace.events.length >= MAX_ANIMATED_STEPS) goTo(state.trace.events.length, false)
+  else play()
 }
 
 function applyVisibility() {
