@@ -707,20 +707,20 @@ footer {
   text-transform: uppercase;
   letter-spacing: 0.04em;
   color: var(--waiting-text);
-  border: 1px solid color-mix(in srgb, var(--waiting) 50%, transparent);
+  background: color-mix(in srgb, var(--waiting) 10%, transparent);
 }
 .tipState.active {
   color: var(--active-text);
-  border: 1px solid color-mix(in srgb, var(--active) 50%, transparent);
+  background: color-mix(in srgb, var(--active) 10%, transparent);
 }
 .tipState.done,
 .tipState.returning {
   color: var(--done-text);
-  border: 1px solid color-mix(in srgb, var(--done) 50%, transparent);
+  background: color-mix(in srgb, var(--done) 10%, transparent);
 }
 .tipState.error {
   color: var(--error-text);
-  border: 1px solid color-mix(in srgb, var(--error) 50%, transparent);
+  background: color-mix(in srgb, var(--error) 10%, transparent);
 }
 .tipMeta {
   margin-top: 4px;
@@ -787,11 +787,11 @@ code .pick {
 }
 .tipPill.yes {
   color: var(--done-text);
-  border: 1px solid color-mix(in srgb, var(--done) 50%, transparent);
+  background: color-mix(in srgb, var(--done) 10%, transparent);
 }
 .tipPill.no {
   color: var(--error-text);
-  border: 1px solid color-mix(in srgb, var(--error) 50%, transparent);
+  background: color-mix(in srgb, var(--error) 10%, transparent);
 }
 .tipResult {
   font-family: var(--vscode-editor-font-family);
