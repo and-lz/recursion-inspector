@@ -1,11 +1,9 @@
 :root {
-  --code-bg: var(--vscode-textCodeBlock-background, rgba(128, 128, 128, 0.15));
-  --code-string: var(--vscode-symbolIcon-stringForeground, #ce9178);
-  --code-number: var(--vscode-symbolIcon-numberForeground, #b5cea8);
-  --code-literal: var(--vscode-symbolIcon-booleanForeground, #569cd6);
-  --code-keyword: var(--vscode-symbolIcon-keywordForeground, #c586c0);
-  --code-call: var(--vscode-symbolIcon-functionForeground, #dcdcaa);
-  --code-operator: var(--vscode-symbolIcon-operatorForeground, var(--vscode-foreground));
+  --code-string: #98c379;
+  --code-number: #d19a66;
+  --code-literal: #d19a66;
+  --code-keyword: #c678dd;
+  --code-call: #61afef;
   --active: #4c8dff;
   --waiting: #e0a526;
   --done: #4cb36b;
@@ -724,21 +722,16 @@ aside[hidden] {
     drop-shadow(0 1px 3px rgba(0, 0, 0, 0.25));
 }
 
-code,
-.tipVal,
-.tipResult,
-.tipValue {
-  background: var(--code-bg);
-  color: inherit;
-  border-radius: 4px;
+body.vscode-light {
+  --code-string: #50a14f;
+  --code-number: #986801;
+  --code-literal: #986801;
+  --code-keyword: #a626a4;
+  --code-call: #4078f2;
 }
 code,
-.tipVal {
-  padding: 0 4px;
-}
-.tipResult,
 .tipValue {
-  padding: 4px 8px;
+  font-variant-ligatures: none;
 }
 .tipValue {
   max-height: 50vh;
@@ -755,9 +748,6 @@ code,
 }
 .tok-keyword {
   color: var(--code-keyword);
-}
-.tok-operator {
-  color: var(--code-operator);
 }
 .tok-call {
   color: var(--code-call);
