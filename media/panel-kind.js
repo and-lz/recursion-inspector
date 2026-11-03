@@ -51,5 +51,5 @@ function renderKinds(recursion) {
 // dos filhos), entre dois filhos e na volta (depois de todos).
 function phaseNote(phase, text) {
   const labels = { pre: 'Pré-ordem', in: 'Em ordem', post: 'Pós-ordem' }
-  return `<span class="phase">${labels[phase]}</span>: ${text}`
+  return `<div class="exRow"><span class="exLabel phase">${labels[phase]}</span><div>${text}</div></div>`
 }

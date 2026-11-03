@@ -16,33 +16,47 @@ function conditionText(node, cond) {
   return `${code(cond.src)}${values} é <b>${cond.result ? 'verdadeiro' : 'falso'}</b>`
 }
 
-function conditionNote(node, step) {
+// Blocos da explicação: título, frase, linhas rotuladas (Teste, Fase...) e exemplo em código.
+function exTitle(text, tone) {
+  return `<h3 class="exTitle ${tone}">${text}</h3>`
+}
+
+function exRow(label, body) {
+  return `<div class="exRow"><span class="exLabel">${label}</span><div>${body}</div></div>`
+}
+
+function exCode(lines) {
+  return `<pre class="exCode">${lines.join('\n')}</pre>`
+}
+
+function conditionRow(node, step) {
   const conds = condsAt(node, step)
   if (!conds.length) return ''
   const last = conds[conds.length - 1]
   const text = conditionText(node, last)
-  if (last.result && node.isBase) return ` Teste: ${text} → é o caso base, não vai chamar ninguém.`
-  if (!last.result && !node.isBase) return ` Teste: ${text} → segue para o caso recursivo.`
-  return ` Teste: ${text}.`
+  if (last.result && node.isBase)
+    return exRow('Teste', `${text}<br>→ caso base, não chama ninguém.`)
+  if (!last.result && !node.isBase)
+    return exRow('Teste', `${text}<br>→ segue para o caso recursivo.`)
+  return exRow('Teste', text)
 }
 
 function narrateCall(node, call, parentCall, step) {
-  const note = conditionNote(node, step)
+  const test = conditionRow(node, step)
   if (!node.parent)
-    return `<b>Início.</b> ${call} é a chamada inicial (profundidade 0). Fica <i>esperando</i> as chamadas que fizer terminarem.${note}`
+    return `${exTitle('Início', 'call')}<p>${call} é a chamada inicial (profundidade 0).</p><p>Fica <i>esperando</i> as chamadas que fizer terminarem.</p>${test}`
   const position = node.parent.children.indexOf(node)
+  const line = node.line ? ` (linha ${node.line})` : ''
   if (node.parent.fn !== node.fn) {
-    return `<b>Outra função recursiva.</b> ${parentCall} (${node.parent.fn}) chamou ${call} (${node.fn}). Nova recursão começa aqui.${note}`
+    return `${exTitle('Outra função recursiva', 'call')}${exCode([`${parentCall} (${node.parent.fn})`, `  └ ${call} (${node.fn})`])}<p>Nova recursão começa aqui.</p>${test}`
   }
-  return `<b>Nova chamada.</b> ${parentCall} chamou ${call} — é a <b>${ordinal(position)} chamada recursiva</b> dela${
-    node.line ? ` (linha ${node.line})` : ''
-  }.${note}`
+  return `${exTitle('Nova chamada', 'call')}${exCode([parentCall, `  └ ${call}`])}<p>É a <b>${ordinal(position)} chamada recursiva</b> dela${line}.</p>${test}`
 }
 
 function narrate(step) {
   const trace = state.trace
   if (step === 0) {
-    return `Aperte <b>▶ Play</b> ou arraste o slider. A primeira chamada é ${code(callText(trace.rootNode, 'f'))}: ninguém a chamou, é o ponto de partida.`
+    return `${exTitle('Pronto', 'call')}<p>Aperte <b>▶ Play</b> ou arraste o slider.</p><p>A primeira chamada é ${code(callText(trace.rootNode, 'f'))}: ninguém a chamou, é o ponto de partida.</p>`
   }
 
   const event = trace.events[step - 1]
@@ -51,10 +65,10 @@ function narrate(step) {
   const call = code(callText(node, 'f'))
 
   if (event.t === 'c')
-    return `${narrateCall(node, call, parentCall, step)} ${phaseNote('pre', 'acabou de entrar, ainda sem chamar nenhum filho.')}`
+    return `${narrateCall(node, call, parentCall, step)}${phaseNote('pre', 'acabou de entrar, ainda sem chamar nenhum filho.')}`
 
   if (event.t === 't')
-    return `<b>Erro.</b> ${call} lançou: ${code(event.msg)}. O erro sobe para quem chamou.`
+    return `${exTitle('Erro', 'error')}<p>${call} lançou: ${code(event.msg)}.</p><p>O erro sobe para quem chamou.</p>`
 
   return narrateReturn(node, event, step)
 }
@@ -70,20 +84,18 @@ function narrateReturn(node, event, step) {
   const next = trace.events[step]
   const hasNext = next && next.t === 'c' && node.parent && next.parent === node.parent.id
   const followUp = hasNext
-    ? ` Em seguida ${parentCall} faz a ${ordinal(node.parent.children.length)} chamada recursiva. ${phaseNote('in', `${parentCall} está entre a ${ordinal(node.parent.children.length - 1)} e a ${ordinal(node.parent.children.length)} chamada.`)}`
+    ? `<p>Em seguida ${parentCall} faz a ${ordinal(node.parent.children.length)} chamada recursiva.</p>${phaseNote('in', `${parentCall} está entre a ${ordinal(node.parent.children.length - 1)} e a ${ordinal(node.parent.children.length)} chamada.`)}`
     : ''
 
   if (node.children.length === 0) {
     const reason = [...condsAt(node, step)].reverse().find((cond) => cond.result)
-    const opening = reason
-      ? `${conditionText(node, reason)}, então ${call} não precisou chamar ninguém`
-      : `${call} não precisou chamar ninguém`
-    return `<b>Caso base.</b> ${opening} e ${destination}.${followUp}`
+    const test = reason ? exRow('Teste', conditionText(node, reason)) : ''
+    return `${exTitle('Caso base', 'base')}<p>${call} não precisou chamar ninguém e ${destination}.</p>${test}${followUp}`
   }
   const parts = node.children
     .map((child) => (child.value && child.kind === 'return' ? child.value.s : '✖'))
     .join(', ')
-  return `<b>Voltando.</b> Todas as ${node.children.length} chamadas filhas de ${call} terminaram (resultados: ${code(parts)}). Combinando, ela ${destination}. ${phaseNote('post', 'todos os filhos voltaram.')}${followUp}`
+  return `${exTitle('Voltando', 'done')}<p>Todas as ${node.children.length} chamadas filhas de ${call} terminaram.</p>${exRow('Resultados', code(parts))}<p>Combinando, ela ${destination}.</p>${phaseNote('post', 'todos os filhos voltaram.')}${followUp}`
 }
 
 function renderSummary(step) {

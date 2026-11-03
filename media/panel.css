@@ -120,22 +120,10 @@ select:hover {
   border-color: var(--vscode-focusBorder);
 }
 #explain {
-  position: absolute;
-  left: 12px;
-  right: 12px;
-  bottom: calc(100% + 8px);
-  z-index: 5;
-  max-width: 760px;
-  margin: 0 auto;
-  padding: 10px 14px;
-  text-align: left;
-  pointer-events: none;
-  background: var(--vscode-editorWidget-background, var(--vscode-editor-background));
-  color: var(--vscode-editorWidget-foreground, var(--vscode-foreground));
-  border: 1px solid var(--vscode-editorWidget-border, var(--vscode-panel-border));
-  border-left: 3px solid var(--active);
-  border-radius: var(--radius);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+  width: 300px;
+  min-width: 240px;
+  overflow-y: auto;
+  border-right: 1px solid var(--border);
 }
 #explain[hidden] {
   display: none;
@@ -144,18 +132,63 @@ select:hover {
   font-size: 13px;
   line-height: 1.5;
 }
+#explainText p {
+  margin: 0 0 8px;
+}
 #explainText code,
 #summary code,
 .frame code {
   padding: 0 4px;
   border-radius: 3px;
 }
-#explainText .phase {
+.exTitle {
+  margin: 4px 0 8px;
+  padding-left: 8px;
+  font-size: 14px;
+  border-left: 3px solid var(--active);
+}
+.exTitle.base {
+  border-color: var(--done);
+}
+.exTitle.done {
+  border-color: var(--done);
+}
+.exTitle.error {
+  border-color: var(--error);
+}
+.exCode {
+  margin: 0 0 8px;
+  padding: 6px 8px;
+  overflow-x: auto;
+  font-family: var(--vscode-editor-font-family, monospace);
+  font-size: 12px;
+  background: var(--vscode-textCodeBlock-background, rgba(127, 127, 127, 0.15));
+  border-radius: var(--radius);
+}
+.exRow {
+  margin: 0 0 8px;
+  padding-top: 6px;
+  border-top: 1px solid var(--border);
+}
+.exLabel {
+  display: block;
+  margin-bottom: 2px;
+  font-size: 11px;
   font-weight: 600;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+.exLabel.phase {
   color: var(--active-text, inherit);
+  opacity: 1;
 }
 #summary {
   margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid var(--border);
+}
+#summary:empty {
+  display: none;
 }
 #legend[hidden] {
   display: none;
