@@ -200,7 +200,7 @@ function tipSection(label, body, className = '') {
 }
 
 function tipRow(name, value) {
-  return `<div class="tipRow"><span class="tipKey">${escapeHtml(name)}</span><span class="tipVal">${highlight(value)}</span></div>`
+  return `<div class="tipRow"><span class="tipKey">${escapeHtml(name)}</span><span class="tipVal">${highlight(prettyValue(value, 30))}</span></div>`
 }
 
 function tipConditions(node, step) {
@@ -232,7 +232,7 @@ function tipFinals(node, entryValues) {
 
 // "return picked" mostra de qual expressão veio o valor; literais e valores iguais ao texto não repetem.
 function tipReturn(node) {
-  const value = `<div class="tipResult">${highlight(node.value.f)}</div>`
+  const value = `<div class="tipResult">${highlight(prettyValue(node.value.f, 24))}</div>`
   if (!node.returnSrc || node.returnSrc === node.value.f) return value
   return `<div class="tipNote">${returnCode(node)}</div>${value}`
 }
