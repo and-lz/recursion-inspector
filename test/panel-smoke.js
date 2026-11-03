@@ -9,6 +9,7 @@ const { runTrace } = require('../src/run')
 
 const PANEL_SCRIPTS = [
   'panel-state.js',
+  'panel-roles.js',
   'panel-summary.js',
   'panel-syntax.js',
   'panel-tree.js',
@@ -275,6 +276,8 @@ async function main() {
   assert.ok(cache.explainText.innerHTML.includes('n = 1'), 'cita o valor do parâmetro')
   assert.ok(cache.vars.innerHTML.includes('teste'), cache.vars.innerHTML)
   checkIncrementalRender(cache.sandbox)
+  const roles = `${vm.runInContext('[...state.trace.nodes.values()].map((node) => node.role)', cache.sandbox)}`
+  assert.ok(roles.startsWith('combined,') && roles.includes('base'), roles)
   await testLocals()
   await testOutline()
   const hoverable = cache.svgElements.filter((element) => element.listeners.mouseenter)

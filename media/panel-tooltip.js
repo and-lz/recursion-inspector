@@ -121,7 +121,10 @@ function describeEdgeValue(node, step) {
       ? `<div class="tipNote">${returnCode(node)}</div>`
       : ''
   const value = `<pre class="tipValue">${highlight(prettify(node.value.f))}</pre>`
-  return head + tipSection('Retorno', source + value)
+  const role = RETURN_ROLES[node.role]
+  const final = node.parent ? '' : ' Resposta final da execução.'
+  const note = `<div class="tipNote"><b>${role.label}</b>: ${escapeHtml(role.hint)}${final}</div>`
+  return head + tipSection('Retorno', source + value + note)
 }
 
 // Destaca em negrito cada termo avaliado do teste (verde = verdadeiro, vermelho = falso);

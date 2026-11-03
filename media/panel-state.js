@@ -262,6 +262,7 @@ function buildTrace(root) {
         returnSrc: null,
         returnPick: null,
         conds: [],
+        role: null,
       }
       if (node.parent) node.parent.children.push(node)
       nodes.set(event.id, node)
@@ -276,6 +277,7 @@ function buildTrace(root) {
   })
 
   attachProbes(nodes, root.startIndex)
+  assignRoles(nodes)
 
   return { events, nodes, rootNode: nodes.get(root.id), maxDepth, total: nodes.size }
 }

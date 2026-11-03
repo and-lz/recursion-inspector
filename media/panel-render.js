@@ -49,7 +49,8 @@ function updateEdgeClass(node, stateName, lastEvent) {
 
 function updateEdgeValue(node, stateName) {
   const returned = stateName === 'done' || stateName === 'returning' || stateName === 'error'
-  const className = `edgeValue${returned ? '' : ' hidden'}${stateName === 'returning' ? ' latest' : ''}${stateName === 'error' ? ' failed' : ''}`
+  const final = node.parent ? '' : ' final'
+  const className = `edgeValue role-${node.role}${final}${returned ? '' : ' hidden'}${stateName === 'returning' ? ' latest' : ''}${stateName === 'error' ? ' failed' : ''}`
   if (className === node.edgeValueClass) return
   node.edgeValueClass = className
   node.edgeValue.setAttribute('class', className)

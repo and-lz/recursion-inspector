@@ -8,6 +8,9 @@
   --waiting: #e0a526;
   --done: #4cb36b;
   --error: #f0545a;
+  --role-propagated: #3ec5d6;
+  --role-combined: #b886f0;
+  --role-memo: #ee7fb4;
   --radius: 8px;
   --border: var(--vscode-panel-border, rgba(128, 128, 128, 0.3));
   --surface: color-mix(in srgb, var(--vscode-foreground) 5%, var(--vscode-editor-background));
@@ -171,6 +174,40 @@ button:hover {
 }
 .chip.base::before {
   border-style: dashed;
+}
+.chip.ret::before {
+  width: auto;
+  height: auto;
+  border: 0;
+  background: none;
+  content: 'Aa';
+  font-weight: bold;
+  font-size: 12px;
+  color: var(--swatch);
+}
+.chip.ret.base {
+  --swatch: var(--done);
+}
+.chip.ret.propagated {
+  --swatch: var(--role-propagated);
+}
+.chip.ret.propagated::before {
+  font-style: italic;
+}
+.chip.ret.combined {
+  --swatch: var(--role-combined);
+}
+.chip.ret.memo {
+  --swatch: var(--role-memo);
+}
+.chip.ret.undefined {
+  --swatch: var(--waiting);
+}
+.chip.ret.final {
+  --swatch: currentColor;
+}
+.chip.ret.final::before {
+  text-decoration: underline;
 }
 main {
   flex: 1;
@@ -412,6 +449,22 @@ footer {
 #tree .edgeValue.hidden {
   opacity: 0;
   pointer-events: none;
+}
+#tree .edgeValue.role-propagated {
+  fill: var(--role-propagated);
+  font-style: italic;
+}
+#tree .edgeValue.role-combined {
+  fill: var(--role-combined);
+}
+#tree .edgeValue.role-memo {
+  fill: var(--role-memo);
+}
+#tree .edgeValue.role-undefined {
+  fill: var(--waiting);
+}
+#tree .edgeValue.final {
+  text-decoration: underline;
 }
 #tree .edgeValue.failed {
   fill: var(--error);
