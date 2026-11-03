@@ -1,5 +1,6 @@
 const vm = require('vm')
 const util = require('util')
+const { describe } = require('./shape')
 
 const EVENT_LIMIT = 20000
 const TIME_LIMIT_MS = 5000
@@ -8,6 +9,7 @@ const STDOUT_LIMIT = 50
 const MAX_ITEMS = 8
 const MAX_DEPTH = 3
 const MAX_TEXT = 200
+const SHAPE_LIMIT = 3000
 
 function isNodeLike(value) {
   return 'val' in value && ('left' in value || 'right' in value || 'next' in value)
@@ -56,6 +58,16 @@ function format(value, full, depth = 0, seen = new Set()) {
 function snapshot(value) {
   const shorten = (text, max) => (text.length > max ? `${text.slice(0, max - 1)}…` : text)
   return { s: shorten(format(value, false), 40), f: shorten(format(value, true), MAX_TEXT) }
+}
+
+// Argumento que é árvore/lista/matriz/grafo leva também a forma estruturada (`d`) para o desenho.
+function snapshotArg(value, budget) {
+  const plain = snapshot(value)
+  if (budget.shapes >= SHAPE_LIMIT) return plain
+  const shape = describe(value)
+  if (!shape) return plain
+  budget.shapes++
+  return { ...plain, d: shape }
 }
 
 function callerLine(stack) {
@@ -167,6 +179,7 @@ function run(code) {
   const stdout = []
   let nextId = 0
   let truncated = false
+  const budget = { shapes: 0 }
 
   Error.stackTraceLimit = 6
 
@@ -184,7 +197,7 @@ function run(code) {
       id,
       parent,
       depth: stack.length,
-      args: args.map(snapshot),
+      args: args.map((arg) => snapshotArg(arg, budget)),
       line: callerLine(new Error().stack),
     })
     stack.push(id)

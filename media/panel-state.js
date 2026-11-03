@@ -66,6 +66,8 @@ for (const id of [
   'inspectorResizer',
   'sidebarResizer',
   'vars',
+  'board',
+  'boardTitle',
   'log',
   'tooltip',
   'first',

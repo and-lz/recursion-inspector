@@ -222,6 +222,20 @@ aside h2 small {
   max-height: 28%;
   overflow: auto;
 }
+#board {
+  font-family: var(--vscode-editor-font-family);
+  font-size: 12px;
+  max-height: 30%;
+  overflow: auto;
+}
+#board pre {
+  margin: 0 0 6px;
+  line-height: 1.25;
+}
+.boardName {
+  font-weight: bold;
+  color: var(--vscode-symbolIcon-variableForeground, var(--active));
+}
 #vars {
   font-family: var(--vscode-editor-font-family);
   font-size: 12px;

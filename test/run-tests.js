@@ -1,8 +1,10 @@
 const assert = require('assert')
+const vm = require('vm')
 const fs = require('fs')
 const { findRecursiveFunctions } = require('../src/detect')
 const { instrument } = require('../src/instrument')
 const { runTrace } = require('../src/run')
+const { describe } = require('../src/shape')
 
 const sameTreePath = '/Users/andre/workspace/LeetCode/tree/100-same-tree/attempt01-11.js'
 
@@ -166,12 +168,59 @@ console.log(pick(0, 5))
   assert.deepStrictEqual(picked, ['right', 'inner'])
 }
 
+function boardTextOf(value) {
+  const context = {}
+  vm.runInNewContext(fs.readFileSync('media/panel-board.js', 'utf8'), context)
+  return vm.runInNewContext('boardText(shape)', { ...context, shape: describe(value) })
+}
+
+async function testShapes() {
+  const tree = { val: 1, left: { val: 2, left: null, right: { val: 4 } }, right: { val: 3 } }
+  assert.strictEqual(boardTextOf(tree), ['1', '├─ L 2', '│  └─ R 4', '└─ R 3'].join('\n'))
+  assert.strictEqual(boardTextOf({ val: 1, next: { val: 2, next: null } }), '1 → 2 → null')
+  assert.strictEqual(
+    boardTextOf([
+      [1, 0],
+      [0, 12],
+    ]),
+    ['+----+----+', '|  1 |  0 |', '+----+----+', '|  0 | 12 |', '+----+----+'].join('\n'),
+  )
+  assert.strictEqual(boardTextOf({ a: ['b', 'c'], b: [] }), 'a → "b", "c"\nb → —')
+  assert.strictEqual(boardTextOf(new Map([[1, [2]]])), '1 → 2')
+  assert.strictEqual(describe([1, 2, 3]), null, 'array simples não é estrutura')
+  assert.strictEqual(describe({ x: 1 }), null)
+  const cyclic = { val: 1 }
+  cyclic.next = cyclic
+  assert.strictEqual(boardTextOf(cyclic), '1 → ↺')
+
+  const source = `function walk(node, grid) {
+  if (!node) return 0
+  return 1 + walk(node.left, grid) + walk(node.right, grid)
+}
+walk({ val: 1, left: { val: 2, left: null, right: null }, right: null }, [[1, 0], [0, 1]])`
+  const [fn] = findRecursiveFunctions(source)
+  const result = await runTrace(instrument(source, fn.start).code)
+  assert.strictEqual(result.error, null)
+  const calls = result.events.filter((event) => event.t === 'c')
+  assert.deepStrictEqual(
+    calls.map((call) => call.args.map((arg) => arg.d && arg.d.k)),
+    [
+      ['tree', 'matrix'],
+      ['tree', 'matrix'],
+      [undefined, 'matrix'],
+      [undefined, 'matrix'],
+      [undefined, 'matrix'],
+    ],
+  )
+}
+
 async function main() {
   await testFib()
   await testProbes()
   await testSameTree()
   await testMutual()
   await testPick()
+  await testShapes()
   console.log('OK')
 }
 

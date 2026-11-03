@@ -12,6 +12,7 @@ function render(previousStep) {
   renderReturns(step)
   renderStack(focus, lastEvent)
   renderVars(focus, lastEvent, step)
+  renderBoard(focus)
   renderLog(previousStep, step)
   if (state.inspected && focus && step !== previousStep) openInspector(focus)
   renderInspector()
