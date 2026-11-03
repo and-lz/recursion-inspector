@@ -105,8 +105,8 @@ function hasOperandBetween(source, sites) {
 }
 
 function callShape(sites) {
-  if (sites.some((site) => site.looped) || sites.length > BINARY_SHAPE_CALLS) return 'múltipla'
-  return sites.length === BINARY_SHAPE_CALLS ? 'binária' : 'linear'
+  if (sites.some((site) => site.looped) || sites.length > BINARY_SHAPE_CALLS) return 'multiple'
+  return sites.length === BINARY_SHAPE_CALLS ? 'binary' : 'linear'
 }
 
 function visitOrders(source, fnNode, sites) {
@@ -114,23 +114,23 @@ function visitOrders(source, fnNode, sites) {
   const last = Math.max(...sites.map((site) => site.node.end))
   const work = collectWork(fnNode, sites)
   const orders = []
-  if (work.some((node) => node.end <= first)) orders.push('pré-ordem')
+  if (work.some((node) => node.end <= first)) orders.push('pre-order')
   if (
     work.some((node) => node.start >= first && node.end <= last) ||
     hasOperandBetween(source, sites)
   )
-    orders.push('em ordem')
+    orders.push('in-order')
   if (work.some((node) => node.start >= last) || sites.some((site) => site.used))
-    orders.push('pós-ordem')
+    orders.push('post-order')
   return orders
 }
 
 // Como a recursão se comporta, olhando só o código: formato das chamadas, cauda, sentido
 // (top-down passa o estado para baixo; bottom-up junta o que os filhos devolvem) e em que
-// momento o trabalho acontece em relação às chamadas (pré, em e pós-ordem).
+// momento o trabalho acontece em relação às chamadas (pré-ordem, em ordem e pós-ordem).
 function classifyRecursion(source, fnNode, name) {
   const sites = findCallSites(fnNode, name)
-  if (!sites.length) return { shape: 'mútua', tail: false, direction: null, orders: [] }
+  if (!sites.length) return { shape: 'mutual', tail: false, direction: null, orders: [] }
   return {
     shape: callShape(sites),
     tail: sites.every((site) => site.tail && !site.looped),

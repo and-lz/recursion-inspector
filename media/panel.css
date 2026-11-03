@@ -64,6 +64,9 @@ body {
   font-family: var(--vscode-editor-font-family);
   letter-spacing: 0.01em;
 }
+#kindLegend {
+  display: contents;
+}
 #kinds {
   display: flex;
   flex-wrap: wrap;

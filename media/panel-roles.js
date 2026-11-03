@@ -14,11 +14,11 @@ const RETURN_ROLES = {
   base: { label: 'caso base', hint: 'devolveu direto, sem chamar ninguém.' },
   propagated: {
     label: 'propagado',
-    hint: 'devolveu o mesmo valor que um dos filhos (escolheu ou repassou).',
+    hint: 'devolveu o mesmo valor que um dos filhos (escolheu ou repassou): típico de cauda e top-down.',
   },
   combined: {
     label: 'combinado',
-    hint: 'calculou um valor novo a partir dos filhos (soma, max, &&...).',
+    hint: 'calculou um valor novo a partir dos filhos (soma, max, &&...): típico de bottom-up.',
   },
 }
 

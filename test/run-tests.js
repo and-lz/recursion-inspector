@@ -229,10 +229,10 @@ function isOdd(n) { return n === 0 ? false : isEven(n - 1) }
     findRecursiveFunctions(source).map((fn) => [fn.name, fn.recursion]),
   )
   assert.deepStrictEqual(kinds.fib, {
-    shape: 'binária',
+    shape: 'binary',
     tail: false,
     direction: 'bottom-up',
-    orders: ['pós-ordem'],
+    orders: ['post-order'],
   })
   assert.deepStrictEqual(kinds.fact, {
     shape: 'linear',
@@ -240,11 +240,11 @@ function isOdd(n) { return n === 0 ? false : isEven(n - 1) }
     direction: 'top-down',
     orders: [],
   })
-  assert.deepStrictEqual(kinds.preorder.orders, ['pré-ordem'])
-  assert.deepStrictEqual(kinds.inorder.orders, ['em ordem'])
-  assert.deepStrictEqual(kinds.postorder.orders, ['pós-ordem'])
-  assert.deepStrictEqual(kinds.inorderList.orders, ['em ordem', 'pós-ordem'])
-  assert.strictEqual(kinds.isEven.shape, 'mútua')
+  assert.deepStrictEqual(kinds.preorder.orders, ['pre-order'])
+  assert.deepStrictEqual(kinds.inorder.orders, ['in-order'])
+  assert.deepStrictEqual(kinds.postorder.orders, ['post-order'])
+  assert.deepStrictEqual(kinds.inorderList.orders, ['in-order', 'post-order'])
+  assert.strictEqual(kinds.isEven.shape, 'mutual')
 }
 
 async function main() {

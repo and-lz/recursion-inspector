@@ -61,6 +61,7 @@ for (const id of [
   'returns',
   'title',
   'kinds',
+  'kindLegend',
   'rootSelect',
   'modeSelect',
   'explainText',
