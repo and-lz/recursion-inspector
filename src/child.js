@@ -91,11 +91,27 @@ function createProbeHooks(probes, where) {
     return value
   }
 
+  // Resultado de cada termo de um teste composto, com o trecho (`from`..`to`) dentro do teste.
+  const pendingTerms = new Map()
+
+  function __term(from, to, line, value) {
+    const position = where()
+    if (!position) return value
+    const queue = pendingTerms.get(position.id) || []
+    queue.push({ from, to, result: Boolean(value) })
+    pendingTerms.set(position.id, queue)
+    return value
+  }
+
   function __cond(src, line, value) {
     const position = where()
     const operands = (position && pending.get(position.id)) || []
-    if (position) pending.delete(position.id)
-    add(() => ({ kind: 'cond', src, line, result: Boolean(value), operands }))
+    const terms = (position && pendingTerms.get(position.id)) || []
+    if (position) {
+      pending.delete(position.id)
+      pendingTerms.delete(position.id)
+    }
+    add(() => ({ kind: 'cond', src, line, result: Boolean(value), operands, terms }))
     return value
   }
 
@@ -117,7 +133,7 @@ function createProbeHooks(probes, where) {
     return args.length > 1 ? args[0] : undefined
   }
 
-  return { __var, __cond, __operand, __final }
+  return { __var, __cond, __operand, __term, __final }
 }
 
 function run(code) {
@@ -160,7 +176,7 @@ function run(code) {
     }
   }
 
-  const { __var, __cond, __operand, __final } = createProbeHooks(probes, () =>
+  const { __var, __cond, __operand, __term, __final } = createProbeHooks(probes, () =>
     truncated || stack.length === 0 ? null : { id: stack[stack.length - 1], at: events.length },
   )
 
@@ -172,6 +188,7 @@ function run(code) {
     __var,
     __cond,
     __operand,
+    __term,
     __final,
     structuredClone,
     console: { log, info: log, warn: log, error: log, debug: log },

@@ -207,7 +207,7 @@ function tipConditions(node, step) {
     .map((cond) => {
       const operands = (cond.operands || []).map((operand) => tipRow(operand.src, operand.v.f))
       const verdict = cond.result ? 'verdadeiro' : 'falso'
-      return `<div class="tipCond"><code>${escapeHtml(cond.src)}</code><span class="tipPill ${cond.result ? 'yes' : 'no'}">${verdict}</span></div>${operands.join('')}`
+      return `<div class="tipCond"><code>${highlightTerms(cond)}</code><span class="tipPill ${cond.result ? 'yes' : 'no'}">${verdict}</span></div>${operands.join('')}`
     })
     .join('')
 }

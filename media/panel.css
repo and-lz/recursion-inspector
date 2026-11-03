@@ -587,6 +587,15 @@ header {
   opacity: 0.7;
   padding-left: 10px;
 }
+.tipCond code .term {
+  font-weight: 700;
+}
+.tipCond code .term.yes {
+  color: var(--done);
+}
+.tipCond code .term.no {
+  color: var(--error);
+}
 .tipPill {
   flex: none;
   padding: 0 8px;

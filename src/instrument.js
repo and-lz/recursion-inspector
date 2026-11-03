@@ -42,6 +42,16 @@ function probeEdits(fn) {
           rank: SUFFIX_RANK + probe.seq,
         },
       ]
+    if (probe.type === 'term')
+      return [
+        {
+          from: probe.start,
+          to: probe.start,
+          text: `__term(${probe.from}, ${probe.to}, ${probe.line}, (`,
+          rank: PREFIX_RANK - probe.seq,
+        },
+        { from: probe.end, to: probe.end, text: '))', rank: SUFFIX_RANK + probe.seq },
+      ]
     const name = JSON.stringify(probe.name)
     const wrapsInParens = probe.type === 'cond' || probe.type === 'operand'
     const hook = probe.type === 'operand' ? '__operand' : '__cond'

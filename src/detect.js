@@ -113,6 +113,22 @@ function conditionOperands(test) {
   return operands
 }
 
+// Termos de um teste composto (`a || b && c`): as folhas dos operadores lógicos. Quem não
+// foi avaliado por curto-circuito simplesmente não é registrado.
+function conditionTerms(test) {
+  const terms = []
+  const visit = (node) => {
+    if (node.type === 'LogicalExpression') {
+      visit(node.left)
+      visit(node.right)
+      return
+    }
+    terms.push(node)
+  }
+  visit(test)
+  return terms.length > 1 ? terms : []
+}
+
 // Fotografa os locais em cada saída da função: o valor final, depois de mutações como
 // `picked.next = ...`. Sem `return` (ou sem argumento) a saída é o fim do corpo.
 function finalProbeAdder(source, fnNode, names, add) {
@@ -156,6 +172,8 @@ function collectProbes(source, fnNode) {
     add('cond', test, { src: source.slice(test.start, test.end) })
     for (const operand of conditionOperands(test))
       add('operand', operand, { src: source.slice(operand.start, operand.end) })
+    for (const term of conditionTerms(test))
+      add('term', term, { from: term.start - test.start, to: term.end - test.start })
   }
 
   const addFinal = finalProbeAdder(source, fnNode, [...locals], add)

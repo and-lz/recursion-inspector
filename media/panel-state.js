@@ -133,6 +133,7 @@ function attachProbes(nodes, startIndex) {
         src: probe.src,
         result: probe.result,
         operands: probe.operands,
+        terms: probe.terms || [],
         line: probe.line,
         at,
       })

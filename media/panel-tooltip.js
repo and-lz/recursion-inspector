@@ -123,3 +123,17 @@ function describeEdgeValue(node, step) {
   const value = `<pre class="tipValue">${escapeHtml(prettify(node.value.f))}</pre>`
   return head + tipSection('Retorno', source + value)
 }
+
+// Destaca em negrito cada termo avaliado do teste (verde = verdadeiro, vermelho = falso);
+// o que o curto-circuito pulou fica sem destaque.
+function highlightTerms(cond) {
+  let html = ''
+  let cursor = 0
+  for (const term of [...(cond.terms || [])].sort((first, second) => first.from - second.from)) {
+    if (term.from < cursor) continue
+    html += escapeHtml(cond.src.slice(cursor, term.from))
+    html += `<b class="term ${term.result ? 'yes' : 'no'}">${escapeHtml(cond.src.slice(term.from, term.to))}</b>`
+    cursor = term.to
+  }
+  return html + escapeHtml(cond.src.slice(cursor))
+}
