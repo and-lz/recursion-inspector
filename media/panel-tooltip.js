@@ -113,7 +113,7 @@ function prettify(text) {
 function describeEdgeValue(node, step) {
   const lastEvent = step > 0 ? state.trace.events[step - 1] : null
   const stateName = nodeState(node, step, lastEvent)
-  const head = `<header class="tipHead">${code(callText(node, 'f'))}</header>`
+  const head = `<header class="tipHead"><span class="tipFn">${escapeHtml(node.fn)}</span></header>`
   if (stateName === 'error') return head + tipSection('Erro', escapeHtml(node.message), 'failed')
   if (stateName !== 'done' && stateName !== 'returning') return ''
   const source =
