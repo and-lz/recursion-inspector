@@ -91,10 +91,20 @@ function buildStatePicker(node, nodeWidth) {
   const picker = svg('g', { class: 'statePicker' })
   const pitch = STATE_DOT_RADIUS * 2 + STATE_DOT_GAP
   const startX = nodeWidth / 2 - ((steps.length - 1) * pitch) / 2
+  // Ponte invisível: o mouse não perde o hover do nó ao descer até as bolinhas.
+  picker.append(
+    svg('rect', {
+      class: 'stateBridge',
+      x: startX - STATE_DOT_RADIUS,
+      y: node.height - 2,
+      width: (steps.length - 1) * pitch + STATE_DOT_RADIUS * 2,
+      height: STATE_DOT_OFFSET + STATE_DOT_RADIUS * 2,
+    }),
+  )
   steps.forEach((entry, index) => {
     const swatch = svg('g', {
       class: `stateSwatch ${entry.name}${entry.step === null ? ' disabled' : ''}`,
-      transform: `translate(${startX + index * pitch},${node.height})`,
+      transform: `translate(${startX + index * pitch},${node.height + STATE_DOT_OFFSET})`,
     })
     const title = svg('title')
     title.textContent = entry.label

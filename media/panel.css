@@ -568,6 +568,9 @@ header {
 .node:hover .statePicker {
   opacity: 1;
 }
+.stateBridge {
+  fill: transparent;
+}
 .stateSwatch {
   cursor: pointer;
 }
