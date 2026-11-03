@@ -744,6 +744,11 @@ header {
 #tree.lowDetail .statePicker {
   display: none;
 }
+#tree.lowDetail .node rect,
+#tree.zooming .node rect {
+  filter: none;
+  transition: none;
+}
 aside[hidden] {
   display: none;
 }

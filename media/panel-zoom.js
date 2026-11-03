@@ -25,26 +25,47 @@ function applyZoom() {
   elements.zoomReset.textContent = `${Math.round(state.zoom * 100)}%`
 }
 
-// Pinça no trackpad chega como wheel com ctrlKey; mantém o ponto sob o cursor parado.
+const ZOOM_IDLE_MS = 150
+const pendingZoom = { deltaY: 0, clientX: 0, clientY: 0, frame: null, idleTimer: null }
+
+// Pinça no trackpad chega como wheel com ctrlKey. Os eventos de um quadro viram um só zoom:
+// cada um refaria o layout da árvore inteira.
 function zoomAt(event) {
   event.preventDefault()
   if (!state.viewport) return
+  pendingZoom.deltaY += event.deltaY
+  pendingZoom.clientX = event.clientX
+  pendingZoom.clientY = event.clientY
+  if (pendingZoom.frame !== null) return
+  pendingZoom.frame = requestAnimationFrame(applyPendingZoom)
+}
+
+// Durante o gesto, sombras e transições saem (custam por nó); voltam quando o gesto para.
+function markZooming() {
+  elements.tree.classList.add('zooming')
+  clearTimeout(pendingZoom.idleTimer)
+  pendingZoom.idleTimer = setTimeout(() => elements.tree.classList.remove('zooming'), ZOOM_IDLE_MS)
+}
+
+// Mantém o ponto sob o cursor parado.
+function applyPendingZoom() {
+  const { deltaY, clientX, clientY } = pendingZoom
+  pendingZoom.frame = null
+  pendingZoom.deltaY = 0
   const wasCompact = isCompact()
   const oldZoom = state.zoom
-  const newZoom = Math.min(
-    MAX_ZOOM,
-    Math.max(MIN_ZOOM, oldZoom * Math.exp(-event.deltaY * ZOOM_SPEED)),
-  )
+  const newZoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, oldZoom * Math.exp(-deltaY * ZOOM_SPEED)))
   if (newZoom === oldZoom) return
+  markZooming()
   const before = elements.tree.getBoundingClientRect()
-  const fractionX = (event.clientX - before.left) / before.width
-  const fractionY = (event.clientY - before.top) / before.height
+  const fractionX = (clientX - before.left) / before.width
+  const fractionY = (clientY - before.top) / before.height
   state.zoom = newZoom
   if (isCompact() === wasCompact) applyZoom()
   else rebuildTree()
   const after = elements.tree.getBoundingClientRect()
-  elements.treeWrap.scrollLeft += after.left + fractionX * after.width - event.clientX
-  elements.treeWrap.scrollTop += after.top + fractionY * after.height - event.clientY
+  elements.treeWrap.scrollLeft += after.left + fractionX * after.width - clientX
+  elements.treeWrap.scrollTop += after.top + fractionY * after.height - clientY
 }
 
 function rebuildTree() {
