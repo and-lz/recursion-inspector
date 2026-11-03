@@ -9,7 +9,8 @@ const EDGE_CHAR_WIDTH = 7.5
 const MIN_EDGE_CHARS = 4
 const MARGIN = 20
 const TOP_MARGIN = 48
-const MAX_LABEL = 30
+const MAX_ARGS = 24
+const FN_CHAR_WIDTH = 5.7
 const SVG_NS = 'http://www.w3.org/2000/svg'
 const FN_COLORS = ['#3b82f6', '#c084fc', '#f97316', '#14b8a6', '#ec4899', '#a3a3a3']
 const EXPLAINED_DELAY_MS = 1400
@@ -82,8 +83,12 @@ function shorten(text, max) {
   return text.length > max ? `${text.slice(0, max - 1)}…` : text
 }
 
+function argsText(node, field) {
+  return node.args.map((arg) => arg[field]).join(', ')
+}
+
 function callText(node, field) {
-  return `${node.fn}(${node.args.map((arg) => arg[field]).join(', ')})`
+  return `${node.fn}(${argsText(node, field)})`
 }
 
 /* ---------- dados ---------- */

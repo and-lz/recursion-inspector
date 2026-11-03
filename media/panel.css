@@ -293,6 +293,14 @@ footer {
   cursor: pointer;
   transition: opacity 0.25s;
 }
+.node .fn {
+  font-size: 10px;
+  opacity: 0.5;
+}
+.node .args {
+  font-weight: 700;
+  fill: var(--vscode-foreground);
+}
 .node rect {
   fill: var(--vscode-editor-background);
   stroke: var(--border);

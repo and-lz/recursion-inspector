@@ -38,8 +38,11 @@ function layout(trace) {
     else node.slot = (node.children[0].slot + node.children[node.children.length - 1].slot) / 2
   }
 
-  const longest = order.reduce((max, node) => Math.max(max, callText(node, 's').length), 10)
-  const nodeWidth = Math.min(longest, MAX_LABEL) * NODE_WIDTH_CHAR + 32
+  const textWidth = (node) =>
+    (node.fn.length + 2) * FN_CHAR_WIDTH +
+    Math.min(argsText(node, 's').length, MAX_ARGS) * NODE_WIDTH_CHAR
+  const longest = order.reduce((max, node) => Math.max(max, textWidth(node)), 10 * NODE_WIDTH_CHAR)
+  const nodeWidth = longest + 32
   const slotWidth = nodeWidth + SLOT_GAP
   for (const node of order) {
     node.x = MARGIN + node.slot * slotWidth
@@ -67,7 +70,13 @@ function buildNodeElement(node, nodeWidth, nodeLayer) {
   tag.style.fill = functionColor(node.fn)
   node.element.append(tag)
   const label = svg('text', { x: 22, y: node.height === NODE_HEIGHT ? 16 : 18 })
-  label.textContent = shorten(callText(node, 's'), MAX_LABEL)
+  const fnOpen = svg('tspan', { class: 'fn' })
+  fnOpen.textContent = `${node.fn}(`
+  const args = svg('tspan', { class: 'args' })
+  args.textContent = shorten(argsText(node, 's'), MAX_ARGS)
+  const fnClose = svg('tspan', { class: 'fn' })
+  fnClose.textContent = ')'
+  label.append(fnOpen, args, fnClose)
   node.retText = svg('text', { x: 22, y: 31, class: 'ret' })
   node.element.append(label, node.retText)
   attachTooltip(node.element, node)
