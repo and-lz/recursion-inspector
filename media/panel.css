@@ -562,10 +562,12 @@ header {
   opacity: 1;
   pointer-events: auto;
 }
-.node .statePicker > rect {
+/* Neutra sempre: o id vence as regras de estado do nó (.node.active rect etc.). */
+#tree .node .statePicker > .statePill {
   fill: var(--vscode-editor-background);
   stroke: var(--border);
   stroke-width: 1;
+  stroke-dasharray: none;
   filter: none;
   animation: none;
 }

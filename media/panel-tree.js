@@ -81,7 +81,9 @@ function buildStatePicker(node, nodeWidth) {
     class: 'statePicker',
     transform: `translate(${(nodeWidth - pillWidth) / 2},${node.height - pillHeight / 2 + STATE_PILL_DROP})`,
   })
-  picker.append(svg('rect', { width: pillWidth, height: pillHeight, rx: pillHeight / 2 }))
+  picker.append(
+    svg('rect', { class: 'statePill', width: pillWidth, height: pillHeight, rx: pillHeight / 2 }),
+  )
   steps.forEach((entry, index) => {
     const swatch = svg('g', {
       class: `stateSwatch ${entry.name}`,
