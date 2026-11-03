@@ -33,9 +33,7 @@ function availableWidth() {
   return Math.max(elements.treeWrap.clientWidth - SCROLLBAR_ALLOWANCE, MIN_AVAILABLE_WIDTH)
 }
 
-function layout(trace) {
-  const { order, leaves } = assignSlots(trace)
-  const compact = isCompact()
+function arrange(trace, order, leaves, compact) {
   const nodeWidth = compact ? DOT_SIZE : widestNode(order)
   const margin = compact ? DOT_MARGIN : MARGIN
   const top = compact ? DOT_MARGIN : TOP_MARGIN
@@ -72,6 +70,19 @@ function layout(trace) {
     order,
     edgeGap: LEVEL_GAP_X,
   }
+}
+
+// Se nem girada a árvore com texto cabe na largura, usa as bolinhas em escala 1:1 (denso) em vez
+// de encolher o texto até sumir; a rolagem vertical dá conta do tamanho.
+function layout(trace) {
+  const { order, leaves } = assignSlots(trace)
+  trace.dense = false
+  if (state.zoom >= LOW_DETAIL_ZOOM) {
+    const detailed = arrange(trace, order, leaves, false)
+    if (detailed.width <= availableWidth()) return detailed
+    trace.dense = true
+  }
+  return arrange(trace, order, leaves, true)
 }
 
 function nodeHeight(node) {

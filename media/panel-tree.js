@@ -23,7 +23,7 @@ function renderFunctionLegend(trace) {
 }
 
 function isCompact() {
-  return state.zoom < LOW_DETAIL_ZOOM
+  return state.zoom < LOW_DETAIL_ZOOM || Boolean(state.trace && state.trace.dense)
 }
 
 // Passo em que o nó está em cada estado; folha nunca espera filhos, então não tem esse estado.

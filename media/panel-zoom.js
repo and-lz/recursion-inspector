@@ -5,11 +5,11 @@ function fitScale() {
   return Math.min(1, availableWidth() / width, wrap.clientHeight / height)
 }
 
-// No modo compacto, MIN_ZOOM mostra a árvore inteira de uma vez e LOW_DETAIL_ZOOM chega a 1:1.
+// Zoom abaixo de LOW_DETAIL_ZOOM: MIN_ZOOM mostra a árvore inteira de uma vez e LOW_DETAIL_ZOOM chega a 1:1.
 // Em qualquer modo a largura desenhada nunca passa da área visível: sem rolagem horizontal.
 function drawScale() {
   const widthLimit = availableWidth() / state.treeSize.width
-  if (!isCompact()) return Math.min(state.zoom, widthLimit)
+  if (state.zoom >= LOW_DETAIL_ZOOM) return Math.min(state.zoom, widthLimit)
   const fit = fitScale()
   const progress = (state.zoom - MIN_ZOOM) / (LOW_DETAIL_ZOOM - MIN_ZOOM)
   return Math.min(fit + progress * (1 - fit), widthLimit)
