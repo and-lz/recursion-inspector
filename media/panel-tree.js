@@ -85,26 +85,22 @@ function stateSteps(node) {
   ]
 }
 
-// Três bolinhas estilo semáforo do macOS na borda de baixo, visíveis só no hover; cada um pula direto para aquele estado.
+// Pílula com três bolinhas estilo semáforo do macOS, a cavalo na borda de baixo; só no hover.
+// Cada bolinha pula direto para aquele estado.
 function buildStatePicker(node, nodeWidth) {
   const steps = stateSteps(node)
-  const picker = svg('g', { class: 'statePicker' })
   const pitch = STATE_DOT_RADIUS * 2 + STATE_DOT_GAP
-  const startX = nodeWidth / 2 - ((steps.length - 1) * pitch) / 2
-  // Ponte invisível: o mouse não perde o hover do nó ao descer até as bolinhas.
-  picker.append(
-    svg('rect', {
-      class: 'stateBridge',
-      x: startX - STATE_DOT_RADIUS,
-      y: node.height - 2,
-      width: (steps.length - 1) * pitch + STATE_DOT_RADIUS * 2,
-      height: STATE_DOT_OFFSET + STATE_DOT_RADIUS * 2,
-    }),
-  )
+  const pillWidth = (steps.length - 1) * pitch + STATE_DOT_RADIUS * 2 + STATE_PILL_PADDING * 2
+  const pillHeight = STATE_DOT_RADIUS * 2 + 8
+  const picker = svg('g', {
+    class: 'statePicker',
+    transform: `translate(${nodeWidth - pillWidth - 12},${node.height - pillHeight / 2})`,
+  })
+  picker.append(svg('rect', { width: pillWidth, height: pillHeight, rx: pillHeight / 2 }))
   steps.forEach((entry, index) => {
     const swatch = svg('g', {
       class: `stateSwatch ${entry.name}${entry.step === null ? ' disabled' : ''}`,
-      transform: `translate(${startX + index * pitch},${node.height + STATE_DOT_OFFSET})`,
+      transform: `translate(${STATE_PILL_PADDING + STATE_DOT_RADIUS + index * pitch},${pillHeight / 2})`,
     })
     const title = svg('title')
     title.textContent = entry.label
