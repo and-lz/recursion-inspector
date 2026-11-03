@@ -13,8 +13,8 @@ function tipSection(label, body, className = '') {
   return `<section class="tipSection ${className}"><h4>${label}</h4>${body}</section>`
 }
 
-function tipRow(name, value) {
-  return `<div class="tipRow"><span class="tipKey">${escapeHtml(name)}</span><span class="tipVal">${highlight(prettyValue(value, 30))}</span></div>`
+function tipRow(name, value, line = null) {
+  return `<div class="tipRow"><span class="tipKey"${lineAttrs(line)}>${escapeHtml(name)}</span><span class="tipVal">${highlight(prettyValue(value, 30))}</span></div>`
 }
 
 // Bloco colapsável; o estado aberto/fechado sobrevive à re-renderização a cada passo.
@@ -46,10 +46,12 @@ function condGroup(node, cond) {
 }
 
 function tipCondRow(cond, decisive) {
-  const operands = (cond.operands || []).map((operand) => tipRow(operand.src, operand.v.f))
+  const operands = (cond.operands || []).map((operand) =>
+    tipRow(operand.src, operand.v.f, operand.line),
+  )
   const verdict = cond.result ? 'verdadeiro' : 'falso'
   const mark = cond === decisive ? ' decisive' : ''
-  return `<div class="tipCond${mark}"><code>${highlightTerms(cond)}</code>${mark ? '<span class="srOnly">teste que levou ao retorno</span>' : ''}<span class="tipPill ${cond.result ? 'yes' : 'no'}">${verdict}</span></div>${operands.join('')}`
+  return `<div class="tipCond${mark}"><code${lineAttrs(cond.line)}>${highlightTerms(cond)}</code>${mark ? '<span class="srOnly">teste que levou ao retorno</span>' : ''}<span class="tipPill ${cond.result ? 'yes' : 'no'}">${verdict}</span></div>${operands.join('')}`
 }
 
 function tipConditions(node, step, returned) {

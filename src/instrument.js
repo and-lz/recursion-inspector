@@ -39,7 +39,7 @@ function probeEdits(fn) {
         {
           from: probe.end,
           to: probe.end,
-          text: `, ${finalEntries(probe)}, ${JSON.stringify(probe.src)})`,
+          text: `, ${finalEntries(probe)}, ${JSON.stringify(probe.src)}, ${probe.line})`,
           rank: SUFFIX_RANK + probe.seq,
         },
       ]

@@ -118,7 +118,7 @@ function createProbeHooks(probes, where) {
     const position = where()
     if (!position) return value
     const queue = pending.get(position.id) || []
-    queue.push({ src, v: snapshot(value) })
+    queue.push({ src, line, v: snapshot(value) })
     pending.set(position.id, queue)
     return value
   }
@@ -152,11 +152,12 @@ function createProbeHooks(probes, where) {
   // Valor final dos locais na saída da chamada (depois de mutações como `picked.next = ...`).
   // Local ainda na zona morta temporal (declarado depois do return) fica de fora.
   function __final(...args) {
-    const [entries, src] = args.length > 1 ? args.slice(1) : [args[0], null]
+    const [entries, src, line] = args.length > 1 ? args.slice(1) : [args[0], null, null]
     const pick = takePick()
     add(() => ({
       kind: 'final',
       src,
+      line,
       pick,
       vars: entries.flatMap(([name, read]) => {
         try {

@@ -137,9 +137,10 @@ function withCode(text) {
 // `return ...` com em negrito o trecho que de fato foi devolvido (return com ?: ou ||, &&).
 function returnCode(node) {
   const pick = node.returnPick
-  if (!pick) return code(`return ${node.returnSrc}`)
+  if (!pick)
+    return `<code${lineAttrs(node.returnLine)}>${highlight(`return ${node.returnSrc}`)}</code>`
   const { returnSrc } = node
-  return `<code>${highlight('return ')}${highlight(returnSrc.slice(0, pick.from))}<b class="pick">${highlight(returnSrc.slice(pick.from, pick.to))}</b>${highlight(returnSrc.slice(pick.to))}</code>`
+  return `<code${lineAttrs(node.returnLine)}>${highlight('return ')}${highlight(returnSrc.slice(0, pick.from))}<b class="pick">${highlight(returnSrc.slice(pick.from, pick.to))}</b>${highlight(returnSrc.slice(pick.to))}</code>`
 }
 
 function shorten(text, max) {
@@ -205,6 +206,7 @@ function attachProbes(nodes, startIndex) {
     if (probe.kind === 'final') {
       node.finals = probe.vars
       node.returnSrc = probe.src
+      node.returnLine = probe.line
       node.returnPick = probe.pick
       node.finalAt = at
     } else if (probe.kind === 'var') node.locals.push({ name: probe.name, v: probe.v, at })
@@ -272,6 +274,7 @@ function buildTrace(root) {
         locals: [],
         finals: null,
         returnSrc: null,
+        returnLine: null,
         returnPick: null,
         finalAt: null,
         conds: [],

@@ -85,3 +85,54 @@ elements.inspector.addEventListener(
   },
   true,
 )
+
+/* ---------- código real: hover mostra o contexto, clique abre a linha ---------- */
+
+const CONTEXT_LINES = 3
+
+function describeSourceContext(line) {
+  const lines = String(state.data.source || '').split('\n')
+  if (!lines.length || line < 1 || line > lines.length) return ''
+  const from = Math.max(1, line - CONTEXT_LINES)
+  const to = Math.min(lines.length, line + CONTEXT_LINES)
+  const rows = []
+  for (let number = from; number <= to; number++) {
+    const mark = number === line ? ' current' : ''
+    rows.push(
+      `<div class="srcLine${mark}"><span class="srcNum">${number}</span><code>${highlight(lines[number - 1]) || ' '}</code></div>`,
+    )
+  }
+  return `<header class="tipHead"><span class="tipFn">${escapeHtml(state.data.fileName || '')}</span><span class="tipMeta">linha ${line}</span></header><div class="srcBlock">${rows.join('')}</div><div class="tipNote">clique para ir ao código</div>`
+}
+
+elements.inspector.addEventListener('mouseover', (event) => {
+  const target = event.target.closest && event.target.closest('[data-line]')
+  if (!target) return
+  const line = Number(target.dataset.line)
+  showTooltip({ line }, () => describeSourceContext(line), {
+    currentTarget: target,
+    clientX: event.clientX,
+    clientY: event.clientY,
+  })
+})
+
+elements.inspector.addEventListener('mouseout', (event) => {
+  const target = event.target.closest && event.target.closest('[data-line]')
+  if (target) hideTooltip()
+})
+
+elements.inspector.addEventListener('mousemove', (event) => {
+  if (tooltip.node && !elements.tooltip.hidden && event.target.closest('[data-line]'))
+    moveTooltip(event)
+})
+
+elements.inspector.addEventListener('click', (event) => {
+  const target = event.target.closest && event.target.closest('[data-line]')
+  if (!target) return
+  vscode.postMessage({ type: 'goto', line: Number(target.dataset.line) })
+})
+
+// Atributos que ligam um trecho de código à linha real: hover mostra o contexto, clique abre.
+function lineAttrs(line) {
+  return line ? ` class="srcRef" data-line="${line}"` : ''
+}

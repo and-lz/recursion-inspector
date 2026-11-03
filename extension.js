@@ -106,6 +106,21 @@ function setHighlight(line) {
   }
 }
 
+// Clique no código do inspetor: abre o arquivo real na linha.
+async function gotoLine(line) {
+  if (!line || !inspectedUri) return
+  const document = await vscode.workspace.openTextDocument(vscode.Uri.parse(inspectedUri))
+  const visible = vscode.window.visibleTextEditors.find(
+    (candidate) => candidate.document.uri.toString() === inspectedUri,
+  )
+  const editor = await vscode.window.showTextDocument(document, {
+    viewColumn: visible ? visible.viewColumn : vscode.ViewColumn.One,
+  })
+  const range = new vscode.Range(line - 1, 0, line - 1, document.lineAt(line - 1).text.length)
+  editor.selection = new vscode.Selection(range.start, range.end)
+  editor.revealRange(range, vscode.TextEditorRevealType.InCenter)
+}
+
 function isFullscreen() {
   return getLayout() === 'fullscreen'
 }
@@ -153,6 +168,7 @@ function ensurePanel(context) {
     if (message.type === 'ready' && pendingPayload)
       panel.webview.postMessage({ type: 'data', payload: pendingPayload })
     if (message.type === 'line') setHighlight(message.line)
+    if (message.type === 'goto') gotoLine(message.line)
     if (message.type === 'settings') context.globalState.update('settings', message.settings)
   })
   panel.onDidDispose(() => {
@@ -191,6 +207,7 @@ async function inspect(context, uriString, start) {
     recursion: instrumented.target.recursion,
     functionParams: Object.fromEntries(instrumented.functions.map((fn) => [fn.name, fn.params])),
     fileName: path.basename(document.uri.fsPath),
+    source: document.getText(),
     settings: context.globalState.get('settings') || {},
     ...result,
   }
