@@ -160,10 +160,7 @@ button:hover {
   --swatch: var(--error);
 }
 .chip.base {
-  --swatch: var(--done);
-}
-.chip.base::before {
-  border-style: dashed;
+  --swatch: color-mix(in srgb, var(--vscode-foreground) 45%, transparent);
 }
 main {
   flex: 1;
@@ -339,7 +336,8 @@ footer {
 }
 .node.base.done rect,
 .node.base.returning rect {
-  stroke-dasharray: 5 3;
+  stroke: color-mix(in srgb, var(--vscode-foreground) 35%, transparent);
+  fill: color-mix(in srgb, var(--vscode-foreground) 8%, var(--vscode-editor-background));
 }
 .edge {
   fill: none;
@@ -434,7 +432,11 @@ footer {
   font-weight: bold;
 }
 .retChip.base {
-  border-style: dashed;
+  border-color: color-mix(in srgb, var(--vscode-foreground) 40%, transparent);
+  background: color-mix(in srgb, var(--vscode-foreground) 8%, transparent);
+}
+.retChip.base.latest {
+  background: color-mix(in srgb, var(--vscode-foreground) 18%, transparent);
 }
 .retChip b {
   color: var(--done);
