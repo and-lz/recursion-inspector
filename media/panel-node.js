@@ -56,14 +56,15 @@ function tipConditions(node, step, returned) {
   const conds = condsAt(node, step)
   const decisive = returned ? decisiveCond(conds) : null
   const showFinal = returned && node.returnSrc
+  // O retorno fica no grupo do teste que o decidiu (ou em "Retorno final" se não houve teste).
+  const finalRow = `<div class="tipCond tipFinal">${returnCode(node)}<span class="tipPill yes">retornou</span></div>`
   return COND_GROUPS.map(({ key, label }) => {
-    const rows = conds
-      .filter((cond) => condGroup(node, cond) === key)
-      .map((cond) => tipCondRow(cond, decisive))
-    if (key === 'final' && showFinal)
-      rows.push(
-        `<div class="tipCond tipFinal">${returnCode(node)}<span class="tipPill yes">retornou</span></div>`,
-      )
+    const rows = []
+    for (const cond of conds.filter((item) => condGroup(node, item) === key)) {
+      rows.push(tipCondRow(cond, decisive))
+      if (showFinal && cond === decisive) rows.push(finalRow)
+    }
+    if (showFinal && key === 'final' && !decisive) rows.push(finalRow)
     return rows.length ? `<div class="tipGroup"><h5>${label}</h5>${rows.join('')}</div>` : ''
   }).join('')
 }
