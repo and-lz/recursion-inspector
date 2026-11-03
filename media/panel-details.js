@@ -219,6 +219,25 @@ function tipChildren(node, step) {
   return `<div class="tipNote">filhos que já retornaram: ${escapeHtml(results.join(', '))}</div>`
 }
 
+// Valores dos locais ao sair; marca (✎) os que mudaram desde a última vez que apareceram.
+function tipFinals(node, entryValues) {
+  if (!node.finals || !node.finals.length) return ''
+  const rows = node.finals.map((local) => {
+    const seen = node.locals.filter((entry) => entry.name === local.name)
+    const before = seen.length ? seen[seen.length - 1].v.f : (entryValues.get(local.name) ?? null)
+    const changed = before !== null && before !== local.v.f
+    return tipRow(changed ? `${local.name} ✎` : local.name, local.v.f)
+  })
+  return tipSection('Ao sair', rows.join(''))
+}
+
+// "return picked" mostra de qual expressão veio o valor; literais e valores iguais ao texto não repetem.
+function tipReturn(node) {
+  const value = `<div class="tipResult">${escapeHtml(node.value.f)}</div>`
+  if (!node.returnSrc || node.returnSrc === node.value.f) return value
+  return `<div class="tipNote"><code>return ${escapeHtml(node.returnSrc)}</code></div>${value}`
+}
+
 function describeNode(node, step) {
   const lastEvent = step > 0 ? state.trace.events[step - 1] : null
   const stateName = nodeState(node, step, lastEvent)
@@ -229,14 +248,20 @@ function describeNode(node, step) {
     returned && node.isBase ? 'caso base' : null,
   ].filter(Boolean)
 
-  const variables = variablesAt(node, step).map((variable) => tipRow(variable.name, variable.value))
+  const entry = variablesAt(node, 0).filter((variable) => variable.isParam)
+  const entryValues = new Map(entry.map((variable) => [variable.name, variable.value]))
+  const variables = variablesAt(node, step)
+    .filter((variable) => !variable.isParam || variable.value !== entryValues.get(variable.name))
+    .map((variable) => tipRow(variable.name, variable.value))
   const conditions = tipConditions(node, step)
   const sections = [
+    entry.length
+      ? tipSection('Ao entrar', entry.map((param) => tipRow(param.name, param.value)).join(''))
+      : '',
     variables.length ? tipSection('Variáveis', variables.join('')) : '',
     conditions ? tipSection('Testes', conditions) : '',
-    returned
-      ? tipSection('Retorno', `<div class="tipResult">${escapeHtml(node.value.f)}</div>`)
-      : '',
+    returned ? tipFinals(node, entryValues) : '',
+    returned ? tipSection('Retorno', tipReturn(node)) : '',
     stateName === 'error' ? tipSection('Erro', escapeHtml(node.message), 'failed') : '',
   ]
   return [

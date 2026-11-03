@@ -116,8 +116,10 @@ function describeEdgeValue(node, step) {
   const head = `<header class="tipHead">${code(callText(node, 'f'))}</header>`
   if (stateName === 'error') return head + tipSection('Erro', escapeHtml(node.message), 'failed')
   if (stateName !== 'done' && stateName !== 'returning') return ''
-  return (
-    head +
-    tipSection('Retorno', `<pre class="tipValue">${escapeHtml(prettify(node.value.f))}</pre>`)
-  )
+  const source =
+    node.returnSrc && node.returnSrc !== node.value.f
+      ? `<div class="tipNote"><code>return ${escapeHtml(node.returnSrc)}</code></div>`
+      : ''
+  const value = `<pre class="tipValue">${escapeHtml(prettify(node.value.f))}</pre>`
+  return head + tipSection('Retorno', source + value)
 }

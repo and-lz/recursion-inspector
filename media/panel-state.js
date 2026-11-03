@@ -120,7 +120,10 @@ function attachProbes(nodes, startIndex) {
     const node = nodes.get(probe.id)
     if (!node) continue
     const at = probe.at - startIndex
-    if (probe.kind === 'var') node.locals.push({ name: probe.name, v: probe.v, at })
+    if (probe.kind === 'final') {
+      node.finals = probe.vars
+      node.returnSrc = probe.src
+    } else if (probe.kind === 'var') node.locals.push({ name: probe.name, v: probe.v, at })
     else
       node.conds.push({
         src: probe.src,
@@ -182,6 +185,8 @@ function buildTrace(root) {
         value: null,
         message: null,
         locals: [],
+        finals: null,
+        returnSrc: null,
         conds: [],
       }
       if (node.parent) node.parent.children.push(node)

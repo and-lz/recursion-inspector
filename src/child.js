@@ -99,7 +99,25 @@ function createProbeHooks(probes, where) {
     return value
   }
 
-  return { __var, __cond, __operand }
+  // Valor final dos locais na saída da chamada (depois de mutações como `picked.next = ...`).
+  // Local ainda na zona morta temporal (declarado depois do return) fica de fora.
+  function __final(...args) {
+    const [entries, src] = args.length > 1 ? args.slice(1) : [args[0], null]
+    add(() => ({
+      kind: 'final',
+      src,
+      vars: entries.flatMap(([name, read]) => {
+        try {
+          return [{ name, v: snapshot(read()) }]
+        } catch {
+          return []
+        }
+      }),
+    }))
+    return args.length > 1 ? args[0] : undefined
+  }
+
+  return { __var, __cond, __operand, __final }
 }
 
 function run(code) {
@@ -142,7 +160,7 @@ function run(code) {
     }
   }
 
-  const { __var, __cond, __operand } = createProbeHooks(probes, () =>
+  const { __var, __cond, __operand, __final } = createProbeHooks(probes, () =>
     truncated || stack.length === 0 ? null : { id: stack[stack.length - 1], at: events.length },
   )
 
@@ -154,6 +172,7 @@ function run(code) {
     __var,
     __cond,
     __operand,
+    __final,
     structuredClone,
     console: { log, info: log, warn: log, error: log, debug: log },
   }

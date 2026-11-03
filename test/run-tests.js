@@ -123,7 +123,7 @@ async function testSameTree() {
     sameFns.map((fn) => fn.name),
     ['isSameTree'],
   )
-  assert.strictEqual(sameFns[0].line, 42)
+  assert.strictEqual(sameFns[0].line, 47)
   const traced = await runTrace(instrument(sameTree, sameFns[0].start).code)
   assert.strictEqual(traced.error, null)
   assert.ok(traced.events.length > 0)

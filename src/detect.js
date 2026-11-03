@@ -55,20 +55,36 @@ function paramLabel(source, param) {
 
 function skipNestedFunction() {}
 
-function declaredNames(fnNode) {
+function patternNames(pattern, names) {
+  if (pattern.type === 'Identifier') names.add(pattern.name)
+  if (pattern.type === 'AssignmentPattern') patternNames(pattern.left, names)
+  if (pattern.type === 'RestElement') patternNames(pattern.argument, names)
+  if (pattern.type === 'ArrayPattern')
+    for (const element of pattern.elements) if (element) patternNames(element, names)
+  if (pattern.type === 'ObjectPattern')
+    for (const property of pattern.properties)
+      patternNames(property.type === 'Property' ? property.value : property, names)
+  return names
+}
+
+// Variáveis declaradas no corpo (sem entrar em funções aninhadas), inclusive por desestruturação.
+function localNames(fnNode) {
   const names = new Set()
-  for (const param of fnNode.params) {
-    if (param.type === 'Identifier') names.add(param.name)
-    if (param.type === 'AssignmentPattern' && param.left.type === 'Identifier')
-      names.add(param.left.name)
-  }
+  if (fnNode.body.type !== 'BlockStatement') return names
   walk.recursive(fnNode.body, null, {
     Function: skipNestedFunction,
     VariableDeclarator(node, state, visit) {
-      if (node.id.type === 'Identifier') names.add(node.id.name)
+      patternNames(node.id, names)
       if (node.init) visit(node.init, state, 'Expression')
     },
   })
+  return names
+}
+
+function declaredNames(fnNode) {
+  const names = new Set()
+  for (const param of fnNode.params) patternNames(param, names)
+  for (const name of localNames(fnNode)) names.add(name)
   return names
 }
 
@@ -97,6 +113,30 @@ function conditionOperands(test) {
   return operands
 }
 
+// Fotografa os locais em cada saída da função: o valor final, depois de mutações como
+// `picked.next = ...`. Sem `return` (ou sem argumento) a saída é o fim do corpo.
+function finalProbeAdder(source, fnNode, names, add) {
+  const addFinal = (type, node, src = null) => {
+    if (names.length) add(type, node, { names, src })
+  }
+  return {
+    atBodyEnd() {
+      if (fnNode.body.type !== 'BlockStatement') return
+      const end = fnNode.body.end - 1
+      addFinal('finalEnd', { start: end, end, loc: fnNode.body.loc })
+    },
+    atReturn(node) {
+      if (node.argument)
+        return addFinal(
+          'final',
+          node.argument,
+          source.slice(node.argument.start, node.argument.end),
+        )
+      addFinal('finalBare', { start: node.start, end: node.start + 'return'.length, loc: node.loc })
+    },
+  }
+}
+
 // Pontos do corpo da função (sem entrar em funções aninhadas) que o instrumentador
 // embrulha para registrar variáveis locais e condições. `seq` segue a ordem de visita
 // (de fora para dentro), usada para desempatar inserções na mesma posição.
@@ -118,8 +158,15 @@ function collectProbes(source, fnNode) {
       add('operand', operand, { src: source.slice(operand.start, operand.end) })
   }
 
+  const addFinal = finalProbeAdder(source, fnNode, [...locals], add)
+  addFinal.atBodyEnd()
+
   walk.recursive(fnNode.body, null, {
     Function: skipNestedFunction,
+    ReturnStatement(node, state, visit) {
+      addFinal.atReturn(node)
+      if (node.argument) visit(node.argument, state, 'Expression')
+    },
     VariableDeclarator(node, state, visit) {
       if (node.id.type === 'Identifier' && node.init && !isFunctionNode(node.init))
         add('var', node.init, { name: node.id.name })

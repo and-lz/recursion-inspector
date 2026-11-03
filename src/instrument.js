@@ -13,8 +13,35 @@ const WRAPPER_RANK = 0
 const PREFIX_RANK = 1e6
 const SUFFIX_RANK = 2e6
 
+function finalEntries(probe) {
+  return `[${probe.names.map((name) => `[${JSON.stringify(name)}, () => ${name}]`).join(', ')}]`
+}
+
 function probeEdits(fn) {
   return fn.probes.flatMap((probe) => {
+    if (probe.type === 'finalEnd')
+      return [
+        { from: probe.start, to: probe.end, text: `;__final(${finalEntries(probe)});`, rank: -1 },
+      ]
+    if (probe.type === 'finalBare')
+      return [
+        {
+          from: probe.start,
+          to: probe.end,
+          text: `return __final(${finalEntries(probe)})`,
+          rank: PREFIX_RANK - probe.seq,
+        },
+      ]
+    if (probe.type === 'final')
+      return [
+        { from: probe.start, to: probe.start, text: '__final(', rank: PREFIX_RANK - probe.seq },
+        {
+          from: probe.end,
+          to: probe.end,
+          text: `, ${finalEntries(probe)}, ${JSON.stringify(probe.src)})`,
+          rank: SUFFIX_RANK + probe.seq,
+        },
+      ]
     const name = JSON.stringify(probe.name)
     const wrapsInParens = probe.type === 'cond' || probe.type === 'operand'
     const hook = probe.type === 'operand' ? '__operand' : '__cond'
