@@ -22,6 +22,12 @@ function renderFunctionLegend(trace) {
   }
 }
 
+function isCompact() {
+  return state.zoom < LOW_DETAIL_ZOOM
+}
+
+// Zoom baixo troca o desenho: nós viram quadradinhos e o espaçamento encolhe de verdade,
+// em vez de só escalar o layout largo (que deixaria tudo esparso e ilegível).
 function layout(trace) {
   const order = []
   const pending = [trace.rootNode]
@@ -36,6 +42,21 @@ function layout(trace) {
     const node = order[index]
     if (node.children.length === 0) node.slot = leaves++
     else node.slot = (node.children[0].slot + node.children[node.children.length - 1].slot) / 2
+  }
+
+  if (isCompact()) {
+    const slotWidth = DOT_SIZE + DOT_GAP
+    const levelHeight = DOT_SIZE + DOT_LEVEL_GAP
+    for (const node of order) {
+      node.x = DOT_MARGIN + node.slot * slotWidth
+      node.y = DOT_MARGIN + node.depth * levelHeight
+    }
+    return {
+      nodeWidth: DOT_SIZE,
+      width: DOT_MARGIN * 2 + leaves * slotWidth,
+      height: DOT_MARGIN * 2 + (trace.maxDepth + 1) * levelHeight,
+      order,
+    }
   }
 
   const longest = order.reduce(
@@ -107,9 +128,14 @@ function buildStatePicker(node, nodeWidth) {
   return picker
 }
 
+function nodeHeight(node) {
+  if (isCompact()) return DOT_SIZE
+  return node.kind === 'throw' ? NODE_HEIGHT : COMPACT_HEIGHT
+}
+
 function buildNodeElement(node, nodeWidth, nodeLayer) {
   node.isBase = node.children.length === 0
-  node.height = node.kind === 'throw' ? NODE_HEIGHT : COMPACT_HEIGHT
+  node.height = nodeHeight(node)
   node.element = svg('g', { class: 'node hidden', transform: `translate(${node.x},${node.y})` })
   node.element.append(svg('rect', { width: nodeWidth, height: node.height }))
   const tag = svg('circle', {
@@ -191,37 +217,6 @@ function buildTree(trace) {
   }
 
   trace.nodeWidth = nodeWidth
-}
-
-// Escala o desenho inteiro: nós e distâncias encolhem juntos, então ficam todos próximos.
-// Abaixo de LOW_DETAIL_ZOOM o texto some e sobra só a forma da árvore.
-function applyZoom() {
-  const { width, height } = state.treeSize
-  const zoom = state.zoom
-  elements.tree.setAttribute('width', width * zoom)
-  elements.tree.setAttribute('height', height * zoom)
-  state.viewport.setAttribute('transform', `scale(${zoom})`)
-  elements.tree.classList.toggle('lowDetail', zoom < LOW_DETAIL_ZOOM)
-}
-
-// Pinça no trackpad chega como wheel com ctrlKey; mantém o ponto sob o cursor parado.
-function zoomAt(event) {
-  event.preventDefault()
-  if (!state.viewport) return
-  const oldZoom = state.zoom
-  const newZoom = Math.min(
-    MAX_ZOOM,
-    Math.max(MIN_ZOOM, oldZoom * Math.exp(-event.deltaY * ZOOM_SPEED)),
-  )
-  if (newZoom === oldZoom) return
-  const before = elements.tree.getBoundingClientRect()
-  const pointX = (event.clientX - before.left) / oldZoom
-  const pointY = (event.clientY - before.top) / oldZoom
-  state.zoom = newZoom
-  applyZoom()
-  const after = elements.tree.getBoundingClientRect()
-  elements.treeWrap.scrollLeft += after.left + pointX * newZoom - event.clientX
-  elements.treeWrap.scrollTop += after.top + pointY * newZoom - event.clientY
 }
 
 function nodeState(node, step, lastEvent) {
