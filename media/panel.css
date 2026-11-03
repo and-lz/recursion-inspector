@@ -779,7 +779,7 @@ footer {
 .tipCond code .term.no {
   color: var(--error-text);
 }
-.tipNote code .pick {
+code .pick {
   font-weight: 700;
   color: var(--done-text);
 }
