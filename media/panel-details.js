@@ -225,7 +225,8 @@ function tipFinals(node, entryValues) {
   const rows = (node.finals || [])
     .filter((local) => entryValues.has(local.name) && entryValues.get(local.name) !== local.v.f)
     .map((local) => tipRow(local.name, local.v.f))
-  if (!rows.length) return ''
+  if (!rows.length)
+    return tipSection('Ao sair', '<div class="tipNote">nada mudou em relação à entrada</div>')
   return tipSection('Ao sair', rows.join(''))
 }
 
