@@ -1,31 +1,21 @@
 /* ---------- tipo da recursão ---------- */
 
-// Mesmo formato dos papéis de retorno: id em inglês, `label` e `hint` em português.
+// Id em inglês (vindo de src/classify.js), rótulo em português. O motivo de cada rótulo
+// (`why`) vem da análise do código da função.
 const RECURSION_KINDS = {
-  linear: { label: 'linear', hint: 'uma chamada recursiva por execução' },
-  binary: { label: 'binária', hint: 'duas chamadas recursivas: a árvore se bifurca' },
-  multiple: {
-    label: 'múltipla',
-    hint: 'três ou mais chamadas, ou chamada dentro de laço ou callback',
-  },
-  mutual: { label: 'mútua', hint: 'chama outra função que volta para ela' },
-  tail: {
-    label: 'de cauda',
-    hint: 'a chamada é a última coisa que a função faz (`return f(...)`)',
-  },
-  'top-down': {
-    label: 'top-down',
-    hint: 'o estado desce pelos parâmetros; não usa o que os filhos devolvem',
-  },
-  'bottom-up': {
-    label: 'bottom-up',
-    hint: 'monta a resposta na volta, combinando o que os filhos devolveram',
-  },
-  'pre-order': { label: 'pré-ordem', hint: 'trabalho antes da chamada recursiva (na ida)' },
-  'in-order': { label: 'em ordem', hint: 'trabalho entre duas chamadas recursivas' },
-  'post-order': { label: 'pós-ordem', hint: 'trabalho depois da volta dos filhos' },
+  linear: 'linear',
+  binary: 'binária',
+  multiple: 'múltipla',
+  mutual: 'mútua',
+  tail: 'de cauda',
+  'top-down': 'top-down',
+  'bottom-up': 'bottom-up',
+  'pre-order': 'pré-ordem',
+  'in-order': 'em ordem',
+  'post-order': 'pós-ordem',
 }
 
+// Cada rótulo com o motivo específico: o trecho do código da função que o causou.
 function recursionKinds(recursion) {
   if (!recursion) return []
   const ids = [
@@ -34,10 +24,10 @@ function recursionKinds(recursion) {
     recursion.direction,
     ...recursion.orders,
   ]
-  return ids.filter(Boolean).map((id) => RECURSION_KINDS[id])
+  return ids.filter(Boolean).map((id) => ({ label: RECURSION_KINDS[id], hint: recursion.why[id] }))
 }
 
-// Chips sob o título e, na legenda, o mesmo vocabulário no formato "nome (descrição)".
+// Chips sob o título e, na legenda, o mesmo vocabulário no formato "nome (motivo)".
 function renderKinds(recursion) {
   const kinds = recursionKinds(recursion)
   elements.kinds.hidden = kinds.length === 0
@@ -59,7 +49,7 @@ function renderKinds(recursion) {
     ...kinds.map((kind) => {
       const chip = document.createElement('span')
       chip.className = 'chip kind'
-      chip.textContent = `${kind.label} (${kind.hint})`
+      chip.textContent = `${kind.label}: ${kind.hint}`
       return chip
     }),
   )

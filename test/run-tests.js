@@ -226,7 +226,19 @@ function isEven(n) { return n === 0 ? true : isOdd(n - 1) }
 function isOdd(n) { return n === 0 ? false : isEven(n - 1) }
 `
   const kinds = Object.fromEntries(
-    findRecursiveFunctions(source).map((fn) => [fn.name, fn.recursion]),
+    findRecursiveFunctions(source).map((fn) => {
+      const { why, ...recursion } = fn.recursion
+      assert.deepStrictEqual(
+        Object.keys(why).sort(),
+        [
+          recursion.shape,
+          ...(recursion.tail ? ['tail'] : []),
+          ...(recursion.direction ? [recursion.direction] : []),
+          ...recursion.orders,
+        ].sort(),
+      )
+      return [fn.name, recursion]
+    }),
   )
   assert.deepStrictEqual(kinds.fib, {
     shape: 'binary',
