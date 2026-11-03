@@ -10,6 +10,7 @@ const PANEL_SCRIPTS = [
   'panel-state.js',
   'panel-syntax.js',
   'panel-tree.js',
+  'panel-layout.js',
   'panel-render.js',
   'panel-zoom.js',
   'panel-details.js',

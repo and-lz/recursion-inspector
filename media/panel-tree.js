@@ -26,57 +26,6 @@ function isCompact() {
   return state.zoom < LOW_DETAIL_ZOOM
 }
 
-// Zoom baixo troca o desenho: nós viram quadradinhos e o espaçamento encolhe de verdade,
-// em vez de só escalar o layout largo (que deixaria tudo esparso e ilegível).
-function layout(trace) {
-  const order = []
-  const pending = [trace.rootNode]
-  while (pending.length) {
-    const node = pending.pop()
-    order.push(node)
-    for (const child of node.children) pending.push(child)
-  }
-
-  let leaves = 0
-  for (let index = order.length - 1; index >= 0; index--) {
-    const node = order[index]
-    if (node.children.length === 0) node.slot = leaves++
-    else node.slot = (node.children[0].slot + node.children[node.children.length - 1].slot) / 2
-  }
-
-  if (isCompact()) {
-    const slotWidth = DOT_SIZE + DOT_GAP
-    const levelHeight = DOT_SIZE + DOT_LEVEL_GAP
-    for (const node of order) {
-      node.x = DOT_MARGIN + node.slot * slotWidth
-      node.y = DOT_MARGIN + node.depth * levelHeight
-    }
-    return {
-      nodeWidth: DOT_SIZE,
-      width: DOT_MARGIN * 2 + leaves * slotWidth,
-      height: DOT_MARGIN * 2 + (trace.maxDepth + 1) * levelHeight,
-      order,
-    }
-  }
-
-  const longest = order.reduce(
-    (max, node) => Math.max(max, Math.min(argsText(node, 's').length, MAX_ARGS)),
-    10,
-  )
-  const nodeWidth = longest * NODE_WIDTH_CHAR + 32
-  const slotWidth = nodeWidth + SLOT_GAP
-  for (const node of order) {
-    node.x = MARGIN + node.slot * slotWidth
-    node.y = TOP_MARGIN + node.depth * (NODE_HEIGHT + LEVEL_GAP)
-  }
-  return {
-    nodeWidth,
-    width: MARGIN * 2 + leaves * slotWidth,
-    height: TOP_MARGIN + MARGIN + (trace.maxDepth + 1) * (NODE_HEIGHT + LEVEL_GAP),
-    order,
-  }
-}
-
 // Passo em que o nó está em cada estado; folha nunca espera filhos, então não tem esse estado.
 function stateSteps(node) {
   const [firstChild] = node.children
@@ -128,11 +77,6 @@ function buildStatePicker(node, nodeWidth) {
   return picker
 }
 
-function nodeHeight(node) {
-  if (isCompact()) return DOT_SIZE
-  return node.kind === 'throw' ? NODE_HEIGHT : COMPACT_HEIGHT
-}
-
 // Cria os elementos de um nó sem geometria: `placeNode` posiciona (e reposiciona no zoom).
 function buildNodeElement(node, nodeLayer) {
   node.isBase = node.children.length === 0
@@ -167,60 +111,6 @@ function buildEdgeElements(node, edgeLayer, valueLayer) {
   node.edgeValueClass = 'edgeValue hidden'
   attachTooltip(node.edgeValue, node, describeEdgeValue)
   valueLayer.append(node.edgeValue)
-}
-
-function placeNode(node, nodeWidth) {
-  node.height = nodeHeight(node)
-  const tall = node.height === NODE_HEIGHT
-  node.element.setAttribute('transform', `translate(${node.x},${node.y})`)
-  node.rect.setAttribute('width', nodeWidth)
-  node.rect.setAttribute('height', node.height)
-  node.tag.setAttribute('cy', tall ? 12 : 14)
-  node.label.setAttribute('y', tall ? 16 : 18)
-  // O farol depende do tamanho do nó: some e é remontado no próximo hover.
-  if (node.picker) node.picker.remove()
-  node.picker = null
-}
-
-function placeEdge(node, nodeWidth) {
-  if (!node.parent) {
-    node.edgeValue.setAttribute('x', node.x + nodeWidth / 2)
-    node.edgeValue.setAttribute('y', node.y - 6)
-    return
-  }
-  const startX = node.parent.x + nodeWidth / 2
-  const startY = node.parent.y + node.parent.height
-  const endX = node.x + nodeWidth / 2
-  const middleY = (startY + node.y) / 2
-  node.edge.setAttribute(
-    'd',
-    `M${startX},${startY} C${startX},${middleY} ${endX},${middleY} ${endX},${node.y}`,
-  )
-  node.edgeValue.setAttribute('x', (startX + endX) / 2)
-  node.edgeValue.setAttribute('y', middleY + 4)
-}
-
-// Calcula o layout do modo atual e move os elementos que já existem.
-function placeTree(trace) {
-  const { nodeWidth, width, height, order } = layout(trace)
-  state.treeSize = { width, height }
-  trace.nodeWidth = nodeWidth
-
-  // Rótulos de irmãos ficam a ~metade de um slot um do outro: o texto cabe nessa folga.
-  const edgeChars = Math.max(
-    MIN_EDGE_CHARS,
-    Math.floor((nodeWidth + SLOT_GAP) / 2 / EDGE_CHAR_WIDTH) - 1,
-  )
-  // Alturas primeiro: a aresta parte da base do pai.
-  for (const node of order) {
-    node.edgeChars = edgeChars
-    placeNode(node, nodeWidth)
-  }
-  for (const node of order) {
-    placeEdge(node, nodeWidth)
-    if (node.edgeValue.textContent) node.edgeValue.textContent = edgeValueText(node, true)
-  }
-  applyZoom()
 }
 
 function buildTree(trace) {

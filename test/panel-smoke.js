@@ -11,6 +11,7 @@ const PANEL_SCRIPTS = [
   'panel-state.js',
   'panel-syntax.js',
   'panel-tree.js',
+  'panel-layout.js',
   'panel-render.js',
   'panel-zoom.js',
   'panel-details.js',
@@ -117,6 +118,36 @@ function checkIncrementalRender(sandbox) {
   )
 }
 
+// Árvore larga (muitas folhas) gira para rolagem vertical; árvore pequena fica em pé.
+async function testOrientation() {
+  const source =
+    'function fib(n) {\n  if (n < 2) return n\n  return fib(n - 1) + fib(n - 2)\n}\nfib(12)'
+  const fn = findRecursiveFunctions(source)[0]
+  const result = await runTrace(instrument(source, fn.start).code)
+  const cache = loadPanel({
+    fnName: 'fib',
+    fnLine: 1,
+    params: fn.params,
+    functionParams: { fib: fn.params },
+    fileName: 'w.js',
+    ...result,
+  })
+  const report = (zoom) =>
+    vm.runInContext(
+      `(() => {
+        state.zoom = ${zoom}
+        relayoutTree()
+        return JSON.stringify([state.trace.horizontal, state.treeSize.width, state.treeSize.height])
+      })()`,
+      cache.sandbox,
+    )
+  for (const zoom of [0.2, 1]) {
+    const [horizontal, width, height] = JSON.parse(report(zoom))
+    assert.strictEqual(horizontal, true, `zoom ${zoom}: gira`)
+    assert.ok(height > width, `zoom ${zoom}: mais alta que larga (${width}x${height})`)
+  }
+}
+
 async function testLocals() {
   const source = `function total(n) {
   if (n === 0) return 0
@@ -200,6 +231,7 @@ async function main() {
   assert.ok(cache.vars.innerHTML.includes('teste'), cache.vars.innerHTML)
   checkIncrementalRender(cache.sandbox)
   await testLocals()
+  await testOrientation()
   const hoverable = cache.svgElements.filter((element) => element.listeners.mouseenter)
   assert.ok(hoverable.length > 0, 'nós da árvore têm tooltip')
   hoverable[0].listeners.mouseenter({ currentTarget: hoverable[0], clientX: 10, clientY: 10 })
