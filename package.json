@@ -22,7 +22,7 @@
             "fullscreen",
             "beside"
           ],
-          "default": "fullscreen",
+          "default": "beside",
           "description": "fullscreen: painel ocupa todo o editor (sidebar escondida). beside: painel ao lado do código, com a linha atual destacada."
         }
       }
