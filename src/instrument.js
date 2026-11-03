@@ -1,4 +1,5 @@
 const { findRecursiveFunctions } = require('./detect')
+const { commentedCalls } = require('./commented-calls')
 
 function wrapperFor(fn) {
   const originalName = `__orig_${fn.name}`
@@ -89,6 +90,10 @@ function instrument(source, start) {
 
   let code = source
   for (const edit of edits) code = code.slice(0, edit.from) + edit.text + code.slice(edit.to)
+
+  // Chamadas comentadas também são exemplos válidos: rodam no fim, isoladas por try/catch.
+  const extra = commentedCalls(source, target.name).map((line) => `try { ${line}\n} catch {}`)
+  if (extra.length) code += `\n;${extra.join('\n;')}\n`
 
   return { code, target, functions }
 }
