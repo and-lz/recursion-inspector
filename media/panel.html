@@ -12,10 +12,6 @@
     <div id="empty">Carregando…</div>
     <div id="rootPicker" hidden></div>
     <div id="app" hidden>
-      <section id="explain" hidden>
-        <div id="explainText"></div>
-        <div id="summary"></div>
-      </section>
       <section id="returns" hidden>
         <span class="label">Retornos (mais recente primeiro):</span>
         <div id="returnChips"></div>
@@ -64,6 +60,10 @@
         </aside>
       </main>
       <footer>
+        <section id="explain" role="status" aria-live="polite" hidden>
+          <div id="explainText"></div>
+          <div id="summary"></div>
+        </section>
         <button id="first" title="Início">⏮</button>
         <button id="prev" title="Passo anterior (←)">◀</button>
         <button id="play" title="Play/Pause (espaço)">▶ Play</button>

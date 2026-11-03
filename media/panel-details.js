@@ -29,14 +29,14 @@ function conditionNote(node, step) {
 function narrateCall(node, call, parentCall, step) {
   const note = conditionNote(node, step)
   if (!node.parent)
-    return `<b>Início.</b> ${call} é a chamada inicial (profundidade 0). Ela vai ficar <i>esperando</i> até todas as chamadas que ela fizer terminarem.${note}`
+    return `<b>Início.</b> ${call} é a chamada inicial (profundidade 0). Fica <i>esperando</i> as chamadas que fizer terminarem.${note}`
   const position = node.parent.children.indexOf(node)
   if (node.parent.fn !== node.fn) {
-    return `<b>Outra função recursiva.</b> ${parentCall} (${node.parent.fn}) chamou ${call} (${node.fn}). Uma nova recursão começa aqui dentro; as chamadas dela aparecem como filhas.${note}`
+    return `<b>Outra função recursiva.</b> ${parentCall} (${node.parent.fn}) chamou ${call} (${node.fn}). Nova recursão começa aqui.${note}`
   }
   return `<b>Nova chamada.</b> ${parentCall} chamou ${call} — é a <b>${ordinal(position)} chamada recursiva</b> dela${
     node.line ? ` (linha ${node.line})` : ''
-  }. Profundidade ${node.depth}: agora há ${node.depth + 1} chamadas empilhadas.${note}`
+  }.${note}`
 }
 
 function narrate(step) {
@@ -83,11 +83,7 @@ function narrateReturn(node, event, step) {
   const parts = node.children
     .map((child) => (child.value && child.kind === 'return' ? child.value.s : '✖'))
     .join(', ')
-  const locals = localsAt(node, step)
-    .map((local) => code(`${local.name} = ${shorten(local.v.f, 30)}`))
-    .join(', ')
-  const kept = locals ? ` Variáveis guardadas: ${locals}.` : ''
-  return `<b>Voltando.</b> Todas as ${node.children.length} chamadas filhas de ${call} terminaram (resultados: ${code(parts)}).${kept} Combinando, ela ${destination}. ${phaseNote('post', 'todos os filhos voltaram.')}${followUp}`
+  return `<b>Voltando.</b> Todas as ${node.children.length} chamadas filhas de ${call} terminaram (resultados: ${code(parts)}). Combinando, ela ${destination}. ${phaseNote('post', 'todos os filhos voltaram.')}${followUp}`
 }
 
 function renderSummary(step) {
