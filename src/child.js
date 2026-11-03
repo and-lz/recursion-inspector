@@ -152,13 +152,14 @@ function createProbeHooks(probes, where) {
   // Valor final dos locais na saída da chamada (depois de mutações como `picked.next = ...`).
   // Local ainda na zona morta temporal (declarado depois do return) fica de fora.
   function __final(...args) {
-    const [entries, src, line] = args.length > 1 ? args.slice(1) : [args[0], null, null]
+    const [entries, src, line, usesCalls] = args.length > 1 ? args.slice(1) : [args[0]]
     const pick = takePick()
     add(() => ({
       kind: 'final',
       src,
       line,
       pick,
+      usesCalls,
       vars: entries.flatMap(([name, read]) => {
         try {
           return [{ name, v: snapshot(read()) }]

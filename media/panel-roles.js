@@ -38,6 +38,12 @@ const RETURN_ROLES = {
       return `${returnPart(node)}devolveu ${code(node.value.s)}, o mesmo valor de ${code(callText(source, 's'))}: repassou o resultado do filho sem montar nada na volta.`
     },
   },
+  own: {
+    label: 'retorno próprio',
+    brief: () => 'o return não usa o resultado dos filhos.',
+    hint: (node) =>
+      `${returnPart(node)}devolveu ${code(node.value.s)}: o ${code('return')} não usa o resultado de nenhum filho, só o que a função já tinha.`,
+  },
   combined: {
     label: 'bottom-up',
     brief: () => 'montado com os retornos dos filhos.',
@@ -68,7 +74,8 @@ function classifyReturn(node, recursed, voidFn) {
   const repeated = node.children.some(
     (child) => child.kind === 'return' && child.value.f === node.value.f,
   )
-  return repeated ? 'propagated' : 'combined'
+  if (repeated) return 'propagated'
+  return node.returnUsesCalls === false ? 'own' : 'combined'
 }
 
 function assignRoles(nodes) {

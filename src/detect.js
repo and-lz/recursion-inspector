@@ -2,6 +2,7 @@ const acorn = require('acorn')
 const walk = require('acorn-walk')
 const { returnPicks } = require('./return-picks')
 const { classifyRecursion } = require('./classify')
+const { markReturnUses } = require('./return-uses')
 
 function parse(source) {
   return acorn.parse(source, {
@@ -280,9 +281,13 @@ function findRecursiveFunctions(source) {
       graph.get(candidate.info.name).add(callee)
   }
 
-  return candidates
+  const recursive = candidates.filter((candidate) => reachesItself(candidate.info.name, graph))
+  const recursiveNames = new Set(recursive.map((candidate) => candidate.info.name))
+  for (const candidate of recursive)
+    markReturnUses(candidate.fnNode, candidate.info.probes, recursiveNames)
+
+  return recursive
     .map((candidate) => candidate.info)
-    .filter((info) => reachesItself(info.name, graph))
     .sort((first, second) => first.start - second.start)
 }
 

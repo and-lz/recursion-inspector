@@ -208,6 +208,7 @@ function attachProbes(nodes, startIndex) {
       node.returnSrc = probe.src
       node.returnLine = probe.line
       node.returnPick = probe.pick
+      node.returnUsesCalls = probe.usesCalls
       node.finalAt = at
     } else if (probe.kind === 'var') node.locals.push({ name: probe.name, v: probe.v, at })
     else
