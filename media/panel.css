@@ -571,20 +571,23 @@ header {
 .stateSwatch {
   cursor: pointer;
 }
-.stateSwatch rect {
-  stroke: var(--swatch);
-  stroke-width: 2;
-  fill: color-mix(in srgb, var(--swatch) 55%, var(--vscode-editor-background));
-}
-.stateSwatch:hover rect {
+.stateSwatch circle {
   fill: var(--swatch);
+  stroke: color-mix(in srgb, var(--swatch) 60%, black);
+  stroke-width: 0.5;
+  transition:
+    fill 0.15s,
+    filter 0.15s;
+}
+.stateSwatch:hover circle {
+  filter: brightness(1.2);
 }
 .stateSwatch.disabled {
   cursor: default;
-  opacity: 0.35;
 }
-.stateSwatch.disabled:hover rect {
-  fill: color-mix(in srgb, var(--swatch) 55%, var(--vscode-editor-background));
+.stateSwatch.disabled circle {
+  --swatch: color-mix(in srgb, var(--vscode-foreground) 25%, var(--vscode-editor-background));
+  filter: none;
 }
 .stateSwatch.active {
   --swatch: var(--active);

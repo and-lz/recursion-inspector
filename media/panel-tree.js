@@ -85,19 +85,20 @@ function stateSteps(node) {
   ]
 }
 
-// Três selos na borda de baixo, visíveis só no hover; cada um pula direto para aquele estado.
+// Três bolinhas estilo semáforo do macOS na borda de baixo, visíveis só no hover; cada um pula direto para aquele estado.
 function buildStatePicker(node, nodeWidth) {
   const steps = stateSteps(node)
   const picker = svg('g', { class: 'statePicker' })
-  const startX = (nodeWidth - steps.length * STATE_SWATCH_WIDTH - (steps.length - 1) * 4) / 2
+  const pitch = STATE_DOT_RADIUS * 2 + STATE_DOT_GAP
+  const startX = nodeWidth / 2 - ((steps.length - 1) * pitch) / 2
   steps.forEach((entry, index) => {
     const swatch = svg('g', {
       class: `stateSwatch ${entry.name}${entry.step === null ? ' disabled' : ''}`,
-      transform: `translate(${startX + index * (STATE_SWATCH_WIDTH + 4)},${node.height - 5})`,
+      transform: `translate(${startX + index * pitch},${node.height})`,
     })
     const title = svg('title')
     title.textContent = entry.label
-    swatch.append(title, svg('rect', { width: STATE_SWATCH_WIDTH, height: 10, rx: 3 }))
+    swatch.append(title, svg('circle', { r: STATE_DOT_RADIUS }))
     swatch.addEventListener('click', (event) => {
       event.stopPropagation()
       if (entry.step === null) return
