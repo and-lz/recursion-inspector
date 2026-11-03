@@ -1,4 +1,12 @@
 :root {
+  --dracula-bg: #282a36;
+  --dracula-fg: #f8f8f2;
+  --dracula-string: #f1fa8c;
+  --dracula-number: #bd93f9;
+  --dracula-keyword: #ff79c6;
+  --dracula-call: #50fa7b;
+  --dracula-operator: #ff79c6;
+  --dracula-literal: #bd93f9;
   --active: #4c8dff;
   --waiting: #e0a526;
   --done: #4cb36b;
@@ -95,8 +103,6 @@ button:hover {
 #explainText code,
 #summary code,
 .frame code {
-  font-family: var(--vscode-editor-font-family);
-  background: var(--vscode-textCodeBlock-background);
   padding: 0 4px;
   border-radius: 3px;
 }
@@ -717,4 +723,41 @@ aside[hidden] {
       0 0 5px color-mix(in srgb, var(--vscode-focusBorder, var(--active)) 70%, transparent)
     )
     drop-shadow(0 1px 3px rgba(0, 0, 0, 0.25));
+}
+
+code,
+.tipVal,
+.tipResult,
+.tipValue {
+  background: var(--dracula-bg);
+  color: var(--dracula-fg);
+  border-radius: 4px;
+}
+code,
+.tipVal {
+  padding: 0 4px;
+}
+.tipResult,
+.tipValue {
+  padding: 4px 8px;
+}
+.tipValue {
+  max-height: 50vh;
+  overflow: auto;
+}
+.tok-string {
+  color: var(--dracula-string);
+}
+.tok-number {
+  color: var(--dracula-number);
+}
+.tok-literal {
+  color: var(--dracula-literal);
+}
+.tok-keyword,
+.tok-operator {
+  color: var(--dracula-keyword);
+}
+.tok-call {
+  color: var(--dracula-call);
 }

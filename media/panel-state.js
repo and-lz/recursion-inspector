@@ -81,7 +81,7 @@ function escapeHtml(text) {
 }
 
 function code(text) {
-  return `<code>${escapeHtml(text)}</code>`
+  return `<code>${highlight(text)}</code>`
 }
 
 function shorten(text, max) {

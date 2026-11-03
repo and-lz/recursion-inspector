@@ -118,9 +118,9 @@ function describeEdgeValue(node, step) {
   if (stateName !== 'done' && stateName !== 'returning') return ''
   const source =
     node.returnSrc && node.returnSrc !== node.value.f
-      ? `<div class="tipNote"><code>return ${escapeHtml(node.returnSrc)}</code></div>`
+      ? `<div class="tipNote">${code(`return ${node.returnSrc}`)}</div>`
       : ''
-  const value = `<pre class="tipValue">${escapeHtml(prettify(node.value.f))}</pre>`
+  const value = `<pre class="tipValue">${highlight(prettify(node.value.f))}</pre>`
   return head + tipSection('Retorno', source + value)
 }
 
@@ -131,9 +131,9 @@ function highlightTerms(cond) {
   let cursor = 0
   for (const term of [...(cond.terms || [])].sort((first, second) => first.from - second.from)) {
     if (term.from < cursor) continue
-    html += escapeHtml(cond.src.slice(cursor, term.from))
-    html += `<b class="term ${term.result ? 'yes' : 'no'}">${escapeHtml(cond.src.slice(term.from, term.to))}</b>`
+    html += highlight(cond.src.slice(cursor, term.from))
+    html += `<b class="term ${term.result ? 'yes' : 'no'}">${highlight(cond.src.slice(term.from, term.to))}</b>`
     cursor = term.to
   }
-  return html + escapeHtml(cond.src.slice(cursor))
+  return html + highlight(cond.src.slice(cursor))
 }

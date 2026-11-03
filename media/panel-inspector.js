@@ -4,7 +4,7 @@ function briefOutcome(node, stateName) {
   if (stateName === 'error')
     return tipSection('Erro', escapeHtml(shorten(node.message, 120)), 'failed')
   if (stateName !== 'done' && stateName !== 'returning') return ''
-  const value = escapeHtml(shorten(node.value.f, 120))
+  const value = highlight(shorten(node.value.f, 120))
   return tipSection('Retorno', `<div class="tipResult">${value}</div>`)
 }
 

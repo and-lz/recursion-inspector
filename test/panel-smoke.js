@@ -9,6 +9,7 @@ const { runTrace } = require('../src/run')
 
 const PANEL_SCRIPTS = [
   'panel-state.js',
+  'panel-syntax.js',
   'panel-tree.js',
   'panel-details.js',
   'panel-inspector.js',

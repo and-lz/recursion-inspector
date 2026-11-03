@@ -158,7 +158,7 @@ function renderStack(focus, lastEvent) {
 function variableLines(node, step) {
   return variablesAt(node, step).map(
     (variable) =>
-      `<div class="var"><b>${escapeHtml(variable.name)}</b> = ${escapeHtml(variable.value)}</div>`,
+      `<div class="var"><b>${escapeHtml(variable.name)}</b> = ${code(variable.value)}</div>`,
   )
 }
 
@@ -166,11 +166,11 @@ function conditionLines(node, step) {
   return condsAt(node, step).flatMap((cond) => {
     const operands = (cond.operands || []).map(
       (operand) =>
-        `<div class="var operand"><b>${escapeHtml(operand.src)}</b> = ${escapeHtml(operand.v.f)}</div>`,
+        `<div class="var operand"><b>${escapeHtml(operand.src)}</b> = ${code(operand.v.f)}</div>`,
     )
     return [
       ...operands,
-      `<div class="var cond"><b>teste</b> ${escapeHtml(cond.src)} → ${cond.result ? 'verdadeiro' : 'falso'}</div>`,
+      `<div class="var cond"><b>teste</b> ${code(cond.src)} → ${cond.result ? 'verdadeiro' : 'falso'}</div>`,
     ]
   })
 }
@@ -180,7 +180,7 @@ function renderVars(focus, lastEvent, step) {
   if (focus) {
     lines.push(...variableLines(focus, step))
     if (lastEvent.t === 'r')
-      lines.push(`<div class="var"><b>retorno</b> = ${escapeHtml(focus.value.f)}</div>`)
+      lines.push(`<div class="var"><b>retorno</b> = ${code(focus.value.f)}</div>`)
     lines.push(...conditionLines(focus, step))
   }
   elements.vars.innerHTML = lines.join('') || '<i>—</i>'
@@ -200,7 +200,7 @@ function tipSection(label, body, className = '') {
 }
 
 function tipRow(name, value) {
-  return `<div class="tipRow"><span class="tipKey">${escapeHtml(name)}</span><span class="tipVal">${escapeHtml(value)}</span></div>`
+  return `<div class="tipRow"><span class="tipKey">${escapeHtml(name)}</span><span class="tipVal">${highlight(value)}</span></div>`
 }
 
 function tipConditions(node, step) {
@@ -234,9 +234,9 @@ function tipFinals(node, entryValues) {
 
 // "return picked" mostra de qual expressão veio o valor; literais e valores iguais ao texto não repetem.
 function tipReturn(node) {
-  const value = `<div class="tipResult">${escapeHtml(node.value.f)}</div>`
+  const value = `<div class="tipResult">${highlight(node.value.f)}</div>`
   if (!node.returnSrc || node.returnSrc === node.value.f) return value
-  return `<div class="tipNote"><code>return ${escapeHtml(node.returnSrc)}</code></div>${value}`
+  return `<div class="tipNote">${code(`return ${node.returnSrc}`)}</div>${value}`
 }
 
 function describeNode(node, step) {
