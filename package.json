@@ -19,11 +19,12 @@
         "recursionInspector.layout": {
           "type": "string",
           "enum": [
+            "tab",
             "fullscreen",
             "beside"
           ],
           "default": "beside",
-          "description": "fullscreen: painel ocupa todo o editor (sidebar escondida). beside: painel ao lado do código, com a linha atual destacada."
+          "description": "tab: painel abre como uma nova aba no grupo atual do editor. fullscreen: painel ocupa todo o editor (sidebar escondida). beside: painel ao lado do código, com a linha atual destacada."
         }
       }
     },

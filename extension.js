@@ -74,13 +74,17 @@ function setHighlight(line) {
 }
 
 function isFullscreen() {
-  return vscode.workspace.getConfiguration('recursionInspector').get('layout') === 'fullscreen'
+  return getLayout() === 'fullscreen'
 }
 
 async function maximizeEditor() {
   if (maximized) return
   maximized = true
   await vscode.commands.executeCommand('workbench.action.maximizeEditorHideSidebar')
+}
+
+function getLayout() {
+  return vscode.workspace.getConfiguration('recursionInspector').get('layout')
 }
 
 function restoreEditor() {
@@ -91,7 +95,7 @@ function restoreEditor() {
 
 function ensurePanel(context) {
   const fullscreen = isFullscreen()
-  const column = fullscreen ? vscode.ViewColumn.Active : vscode.ViewColumn.Beside
+  const column = getLayout() === 'beside' ? vscode.ViewColumn.Beside : vscode.ViewColumn.Active
   if (panel) {
     panel.reveal(column, !fullscreen)
     if (fullscreen) maximizeEditor()
