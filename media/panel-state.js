@@ -22,7 +22,6 @@ const DOT_SIZE = 12
 const DOT_GAP = 3
 const DOT_LEVEL_GAP = 10
 const DOT_MARGIN = 10
-const DOT_MIN_SCALE = 0.4
 const SVG_NS = 'http://www.w3.org/2000/svg'
 const FN_COLORS = ['#3b82f6', '#c084fc', '#f97316', '#14b8a6', '#ec4899', '#a3a3a3']
 const EXPLAINED_DELAY_MS = 1400

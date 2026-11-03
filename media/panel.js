@@ -232,6 +232,9 @@ elements.treeWrap.addEventListener(
   },
   { passive: false },
 )
+window.addEventListener('resize', () => {
+  if (state.viewport && isCompact()) applyZoom()
+})
 document.addEventListener('keydown', (event) => {
   if (!state.trace || event.target.tagName === 'SELECT') return
   if (event.key === 'Escape') elements.menu.hidden = true

@@ -1,8 +1,16 @@
-// No modo compacto o zoom varia só a escala dos quadradinhos (DOT_MIN_SCALE..1).
+// Maior escala em que a árvore compacta inteira cabe na área visível.
+function fitScale() {
+  const { width, height } = state.treeSize
+  const wrap = elements.treeWrap
+  return Math.min(1, wrap.clientWidth / width, wrap.clientHeight / height)
+}
+
+// No modo compacto, MIN_ZOOM mostra a árvore inteira de uma vez e LOW_DETAIL_ZOOM chega a 1:1.
 function drawScale() {
   if (!isCompact()) return state.zoom
+  const fit = fitScale()
   const progress = (state.zoom - MIN_ZOOM) / (LOW_DETAIL_ZOOM - MIN_ZOOM)
-  return DOT_MIN_SCALE + progress * (1 - DOT_MIN_SCALE)
+  return fit + progress * (1 - fit)
 }
 
 // Escala o desenho inteiro: nós e distâncias encolhem juntos, então ficam todos próximos.
