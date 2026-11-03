@@ -1,4 +1,4 @@
-/* ---------- cores de código (tema Dracula) ---------- */
+/* ---------- cores de código (herdam as cores do tema do VS Code) ---------- */
 
 const TOKEN_PATTERN = new RegExp(
   [

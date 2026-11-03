@@ -1,12 +1,11 @@
 :root {
-  --dracula-bg: #282a36;
-  --dracula-fg: #f8f8f2;
-  --dracula-string: #f1fa8c;
-  --dracula-number: #bd93f9;
-  --dracula-keyword: #ff79c6;
-  --dracula-call: #50fa7b;
-  --dracula-operator: #ff79c6;
-  --dracula-literal: #bd93f9;
+  --code-bg: var(--vscode-textCodeBlock-background, rgba(128, 128, 128, 0.15));
+  --code-string: var(--vscode-symbolIcon-stringForeground, #ce9178);
+  --code-number: var(--vscode-symbolIcon-numberForeground, #b5cea8);
+  --code-literal: var(--vscode-symbolIcon-booleanForeground, #569cd6);
+  --code-keyword: var(--vscode-symbolIcon-keywordForeground, #c586c0);
+  --code-call: var(--vscode-symbolIcon-functionForeground, #dcdcaa);
+  --code-operator: var(--vscode-symbolIcon-operatorForeground, var(--vscode-foreground));
   --active: #4c8dff;
   --waiting: #e0a526;
   --done: #4cb36b;
@@ -729,8 +728,8 @@ code,
 .tipVal,
 .tipResult,
 .tipValue {
-  background: var(--dracula-bg);
-  color: var(--dracula-fg);
+  background: var(--code-bg);
+  color: inherit;
   border-radius: 4px;
 }
 code,
@@ -746,22 +745,24 @@ code,
   overflow: auto;
 }
 .tok-string {
-  color: var(--dracula-string);
+  color: var(--code-string);
 }
 .tok-number {
-  color: var(--dracula-number);
+  color: var(--code-number);
 }
 .tok-literal {
-  color: var(--dracula-literal);
+  color: var(--code-literal);
 }
-.tok-keyword,
+.tok-keyword {
+  color: var(--code-keyword);
+}
 .tok-operator {
-  color: var(--dracula-keyword);
+  color: var(--code-operator);
 }
 .tok-call {
-  color: var(--dracula-call);
+  color: var(--code-call);
 }
 .tipFn {
   font-family: var(--vscode-editor-font-family);
-  color: var(--dracula-call);
+  color: var(--code-call);
 }
