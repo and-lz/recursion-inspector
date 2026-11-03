@@ -220,15 +220,12 @@ function tipChildren(node, step) {
   return `<div class="tipNote">filhos que já retornaram: ${escapeHtml(results.join(', '))}</div>`
 }
 
-// Valores dos locais ao sair; marca (✎) os que mudaram desde a última vez que apareceram.
+// Valores ao sair, só dos que mudaram em relação à entrada.
 function tipFinals(node, entryValues) {
-  if (!node.finals || !node.finals.length) return ''
-  const rows = node.finals.map((local) => {
-    const seen = node.locals.filter((entry) => entry.name === local.name)
-    const before = seen.length ? seen[seen.length - 1].v.f : (entryValues.get(local.name) ?? null)
-    const changed = before !== null && before !== local.v.f
-    return tipRow(changed ? `${local.name} ✎` : local.name, local.v.f)
-  })
+  const rows = (node.finals || [])
+    .filter((local) => entryValues.has(local.name) && entryValues.get(local.name) !== local.v.f)
+    .map((local) => tipRow(local.name, local.v.f))
+  if (!rows.length) return ''
   return tipSection('Ao sair', rows.join(''))
 }
 
