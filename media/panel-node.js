@@ -89,19 +89,12 @@ function tipFinals(node, entryValues) {
   return tipFold('finals', 'Ao sair', `${rows.length} mudaram`, rows.join(''))
 }
 
-// Nome (ou expressão) devolvido, ex.: `right`; literais e valores iguais ao texto não repetem.
-function returnedName(node) {
-  const { returnSrc, returnPick } = node
-  if (!returnSrc) return ''
-  const picked = returnPick ? returnSrc.slice(returnPick.from, returnPick.to) : returnSrc
-  return picked === node.value.f ? '' : picked
-}
-
-// O código do `return` fica no fim de Testes; aqui o nome devolvido e o valor.
+// Valor devolvido e o papel dele na recursão; a explicação já cita o `return` com o nome devolvido.
 function tipReturn(node) {
-  const name = returnedName(node)
-  const label = name ? `<div class="tipNote">${code(shorten(name, 60))}</div>` : ''
-  return `${label}<div class="tipResult">${highlight(prettyValue(node.value.f, 24))}</div>`
+  const value = `<div class="tipResult">${highlight(prettyValue(node.value.f, 24))}</div>`
+  const role = RETURN_ROLES[node.role]
+  if (!role) return value
+  return `${value}<div class="tipNote tipRole"><b>${role.label}</b>: ${role.hint(node)}</div>`
 }
 
 function tipOutcome(node, stateName) {
