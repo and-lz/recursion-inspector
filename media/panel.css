@@ -627,7 +627,6 @@ footer {
 .resizer:hover,
 .resizer.dragging {
   background: var(--active);
-  opacity: 0.6;
 }
 #inspector {
   flex: 1;
@@ -708,20 +707,20 @@ footer {
   text-transform: uppercase;
   letter-spacing: 0.04em;
   color: var(--waiting);
-  background: color-mix(in srgb, var(--waiting) 16%, transparent);
+  background: color-mix(in srgb, var(--waiting) 10%, transparent);
 }
 .tipState.active {
   color: var(--active);
-  background: color-mix(in srgb, var(--active) 16%, transparent);
+  background: color-mix(in srgb, var(--active) 10%, transparent);
 }
 .tipState.done,
 .tipState.returning {
   color: var(--done);
-  background: color-mix(in srgb, var(--done) 16%, transparent);
+  background: color-mix(in srgb, var(--done) 10%, transparent);
 }
 .tipState.error {
   color: var(--error);
-  background: color-mix(in srgb, var(--error) 16%, transparent);
+  background: color-mix(in srgb, var(--error) 10%, transparent);
 }
 .tipMeta {
   margin-top: 4px;
@@ -788,11 +787,11 @@ footer {
 }
 .tipPill.yes {
   color: var(--done);
-  background: color-mix(in srgb, var(--done) 16%, transparent);
+  background: color-mix(in srgb, var(--done) 10%, transparent);
 }
 .tipPill.no {
   color: var(--error);
-  background: color-mix(in srgb, var(--error) 16%, transparent);
+  background: color-mix(in srgb, var(--error) 10%, transparent);
 }
 .tipResult {
   font-family: var(--vscode-editor-font-family);

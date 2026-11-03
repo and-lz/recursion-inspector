@@ -6,7 +6,10 @@ function svg(tag, attributes) {
 
 function functionColor(name) {
   const names = Object.keys(state.data.functionParams)
-  return FN_COLORS[names.indexOf(name) % FN_COLORS.length]
+  const classes = document.body.classList
+  const isLight = classes.contains('vscode-light') || classes.contains('vscode-high-contrast-light')
+  const palette = isLight ? FN_COLORS_LIGHT : FN_COLORS_DARK
+  return palette[names.indexOf(name) % palette.length]
 }
 
 function renderFunctionLegend(trace) {
