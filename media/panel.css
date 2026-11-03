@@ -172,8 +172,7 @@ main {
 }
 #treeWrap {
   flex: 1;
-  overflow-x: hidden;
-  overflow-y: auto;
+  overflow: auto;
   text-align: center;
   border-right: 1px solid var(--border);
   background-image: radial-gradient(

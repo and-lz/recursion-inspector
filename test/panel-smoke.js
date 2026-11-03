@@ -147,7 +147,7 @@ async function testOrientation() {
     const [horizontal, width, height] = JSON.parse(report(zoom))
     assert.strictEqual(horizontal, true, `zoom ${zoom}: gira`)
     assert.ok(height > width, `zoom ${zoom}: mais alta que larga (${width}x${height})`)
-    assert.ok(Number(cache.tree.attrs.width) <= 1000, `zoom ${zoom}: sem rolagem horizontal`)
+    assert.ok(width <= 1000, `zoom ${zoom}: layout cabe na largura`)
   }
 }
 

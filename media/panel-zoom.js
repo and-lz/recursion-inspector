@@ -6,13 +6,13 @@ function fitScale() {
 }
 
 // Zoom abaixo de LOW_DETAIL_ZOOM: MIN_ZOOM mostra a árvore inteira de uma vez e LOW_DETAIL_ZOOM chega a 1:1.
-// Em qualquer modo a largura desenhada nunca passa da área visível: sem rolagem horizontal.
+// O layout já cabe na largura em 100%; só o zoom do usuário (ampliar) pode passar dela,
+// e aí é preciso rolar para ver o resto.
 function drawScale() {
-  const widthLimit = availableWidth() / state.treeSize.width
-  if (state.zoom >= LOW_DETAIL_ZOOM) return Math.min(state.zoom, widthLimit)
+  if (state.zoom >= LOW_DETAIL_ZOOM) return state.zoom
   const fit = fitScale()
   const progress = (state.zoom - MIN_ZOOM) / (LOW_DETAIL_ZOOM - MIN_ZOOM)
-  return Math.min(fit + progress * (1 - fit), widthLimit)
+  return fit + progress * (1 - fit)
 }
 
 // Escala o desenho inteiro: nós e distâncias encolhem juntos, então ficam todos próximos.
