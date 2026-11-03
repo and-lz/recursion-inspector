@@ -79,13 +79,14 @@ function buildStatePicker(node, nodeWidth) {
 
 // Cria os elementos de um nó sem geometria: `placeNode` posiciona (e reposiciona no zoom).
 function buildNodeElement(node, nodeLayer) {
-  node.isBase = node.children.length === 0
+  node.isBase = node.children.length === 0 && !node.omitted
   node.element = svg('g', { class: 'node hidden' })
   node.rect = svg('rect')
   node.tag = svg('circle', { class: 'tag', r: 4, cx: 12 })
   node.tag.style.fill = functionColor(node.fn)
   node.label = svg('text', { x: 22 })
-  node.label.textContent = shorten(argsText(node, 's'), MAX_ARGS)
+  const omittedText = node.omitted ? ` …+${node.omitted}` : ''
+  node.label.textContent = shorten(argsText(node, 's'), MAX_ARGS - omittedText.length) + omittedText
   node.retText = svg('text', { x: 22, y: 31, class: 'ret' })
   node.element.append(node.rect, node.tag, node.label, node.retText)
   // O farol só é montado no primeiro hover: com milhares de nós, montar todos custa caro.

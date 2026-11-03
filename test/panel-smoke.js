@@ -9,6 +9,7 @@ const { runTrace } = require('../src/run')
 
 const PANEL_SCRIPTS = [
   'panel-state.js',
+  'panel-summary.js',
   'panel-syntax.js',
   'panel-tree.js',
   'panel-layout.js',
@@ -83,6 +84,9 @@ function loadPanel(payload) {
     },
     setTimeout,
     clearTimeout,
+    requestAnimationFrame: () => 0,
+    cancelAnimationFrame() {},
+    performance: { now: () => 0 },
   }
   const source = PANEL_SCRIPTS.map((name) =>
     fs.readFileSync(path.join(__dirname, '..', 'media', name), 'utf8'),
@@ -201,6 +205,29 @@ contains({ l: { l: null, r: null }, r: null }, { l: null, r: null })`
   assert.ok(mutualCache.fnLegend.children.length === 2, 'legenda com as duas funções')
 }
 
+async function testSummary() {
+  const source =
+    'function fib(n) {\n  if (n < 2) return n\n  return fib(n - 1) + fib(n - 2)\n}\nfib(10)'
+  const fn = findRecursiveFunctions(source)[0]
+  const result = await runTrace(instrument(source, fn.start).code)
+  const payload = {
+    fnName: 'fib',
+    fnLine: 1,
+    params: fn.params,
+    functionParams: { fib: fn.params },
+    fileName: 'w.js',
+    ...result,
+  }
+  const summary = loadPanel(payload)
+  assert.strictEqual(summary.viewMode.hidden, false, 'toggle aparece em trace grande')
+  assert.ok(summary.slider.max < result.events.length, 'resumido corta eventos')
+  summary.slider.value = summary.slider.max
+  summary.slider.listeners.input()
+  assert.ok(summary.summary.innerHTML.includes('177 chamadas'), summary.summary.innerHTML)
+  const full = loadPanel({ ...payload, settings: { summarized: false } })
+  assert.strictEqual(full.slider.max, result.events.length)
+}
+
 async function main() {
   const source =
     'function fib(n) {\n  if (n < 2) return n\n  return fib(n - 1) + fib(n - 2)\n}\nfib(4)\nfib(1)'
@@ -243,6 +270,7 @@ async function main() {
   hoverable[0].listeners.mouseleave()
   assert.strictEqual(cache.tooltip.hidden, true)
   await testMutual()
+  await testSummary()
   console.log('panel OK')
 }
 

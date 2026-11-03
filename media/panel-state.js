@@ -34,6 +34,7 @@ const EXPLAINED_DELAY_MS = 1400
 const COMPACT_MAX_DELAY_MS = 250
 const COMPACT_TOTAL_MS = 2000
 const MAX_ANIMATED_STEPS = 100
+const SUMMARY_HEAD = 20
 
 const elements = {}
 for (const id of [
@@ -74,6 +75,7 @@ for (const id of [
   'slider',
   'zoomReset',
   'counter',
+  'viewMode',
 ]) {
   elements[id] = document.getElementById(id)
 }
@@ -91,6 +93,7 @@ const state = {
   zoom: 1,
   treeSize: null,
   viewport: null,
+  summarized: true,
 }
 
 function ordinal(index) {

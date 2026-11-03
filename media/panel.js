@@ -91,7 +91,10 @@ function togglePlay() {
 function selectRoot(index) {
   pause()
   closeInspector()
-  const trace = buildTrace(state.roots[index])
+  const fullTrace = buildTrace(state.roots[index])
+  const summarizable = fullTrace.events.length >= MAX_ANIMATED_STEPS
+  elements.viewMode.hidden = !summarizable
+  const trace = summarizable && state.summarized ? summarizeTrace(fullTrace) : fullTrace
   state.trace = trace
   state.step = 0
   buildTree(trace)
@@ -140,7 +143,8 @@ function load(data) {
   })
   selectRoot(0)
   // Trace grande: animar não ajuda; vai direto ao resultado final.
-  if (state.trace.events.length >= MAX_ANIMATED_STEPS) goTo(state.trace.events.length, false)
+  if (state.trace.events.length >= MAX_ANIMATED_STEPS || !elements.viewMode.hidden)
+    goTo(state.trace.events.length, false)
   else play()
 }
 
@@ -162,6 +166,7 @@ function saveSettings() {
       showExplain: elements.showExplain.checked,
       showReturns: elements.showReturns.checked,
       showSidebar: elements.showSidebar.checked,
+      summarized: elements.viewMode.value === 'summary',
     },
   })
 }
@@ -171,6 +176,8 @@ function applySettings(settings) {
   elements.showExplain.checked = Boolean(settings.showExplain)
   elements.showReturns.checked = Boolean(settings.showReturns)
   elements.showSidebar.checked = settings.showSidebar !== false
+  state.summarized = settings.summarized !== false
+  elements.viewMode.value = state.summarized ? 'summary' : 'full'
   applyVisibility()
 }
 
@@ -180,6 +187,7 @@ for (const control of [
   elements.showReturns,
   elements.showSidebar,
   elements.modeSelect,
+  elements.viewMode,
 ]) {
   control.addEventListener('change', saveSettings)
 }
@@ -195,6 +203,11 @@ document.addEventListener('click', (event) => {
   if (!elements.menu.contains(event.target)) elements.menu.hidden = true
 })
 
+elements.viewMode.addEventListener('change', () => {
+  state.summarized = elements.viewMode.value === 'summary'
+  selectRoot(Number(elements.rootSelect.value))
+  goTo(state.trace.events.length, false)
+})
 elements.rootSelect.addEventListener('change', () => selectRoot(Number(elements.rootSelect.value)))
 elements.log.addEventListener('click', (event) => {
   const row = event.target.closest('.row')
