@@ -71,6 +71,41 @@ function buildInspectButton(node, nodeWidth) {
   return button
 }
 
+// Passo em que o nó está em cada estado; folha nunca espera filhos.
+function stateSteps(node) {
+  return [
+    { name: 'active', label: 'chamando agora', step: node.callIndex + 1 },
+    node.children.length && {
+      name: 'waiting',
+      label: 'esperando os filhos',
+      step: node.children[0].callIndex + 1,
+    },
+    { name: 'done', label: 'já retornou', step: node.endIndex + 1 },
+  ].filter(Boolean)
+}
+
+// Três selos na borda de baixo, visíveis só no hover; cada um pula direto para aquele estado.
+function buildStatePicker(node, nodeWidth) {
+  const steps = stateSteps(node)
+  const picker = svg('g', { class: 'statePicker' })
+  const startX = (nodeWidth - steps.length * STATE_SWATCH_WIDTH - (steps.length - 1) * 4) / 2
+  steps.forEach((entry, index) => {
+    const swatch = svg('g', {
+      class: `stateSwatch ${entry.name}`,
+      transform: `translate(${startX + index * (STATE_SWATCH_WIDTH + 4)},${node.height - 5})`,
+    })
+    const title = svg('title')
+    title.textContent = entry.label
+    swatch.append(title, svg('rect', { width: STATE_SWATCH_WIDTH, height: 10, rx: 3 }))
+    swatch.addEventListener('click', (event) => {
+      event.stopPropagation()
+      goTo(entry.step, true)
+    })
+    picker.append(swatch)
+  })
+  return picker
+}
+
 function buildNodeElement(node, nodeWidth, nodeLayer) {
   node.isBase = node.children.length === 0
   node.height = node.kind === 'throw' ? NODE_HEIGHT : COMPACT_HEIGHT
@@ -88,7 +123,7 @@ function buildNodeElement(node, nodeWidth, nodeLayer) {
   label.textContent = shorten(argsText(node, 's'), MAX_ARGS)
   node.retText = svg('text', { x: 22, y: 31, class: 'ret' })
   node.element.append(label, node.retText)
-  node.element.append(buildInspectButton(node, nodeWidth))
+  node.element.append(buildInspectButton(node, nodeWidth), buildStatePicker(node, nodeWidth))
   attachTooltip(node.element, node)
   node.element.addEventListener('click', () => goTo(node.callIndex + 1, true))
   nodeLayer.append(node.element)

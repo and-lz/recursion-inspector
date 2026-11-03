@@ -561,6 +561,33 @@ header {
 .node:hover .inspectBtn {
   opacity: 1;
 }
+.statePicker {
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.node:hover .statePicker {
+  opacity: 1;
+}
+.stateSwatch {
+  cursor: pointer;
+}
+.stateSwatch rect {
+  stroke: var(--swatch);
+  stroke-width: 2;
+  fill: color-mix(in srgb, var(--swatch) 55%, var(--vscode-editor-background));
+}
+.stateSwatch:hover rect {
+  fill: var(--swatch);
+}
+.stateSwatch.active {
+  --swatch: var(--active);
+}
+.stateSwatch.waiting {
+  --swatch: var(--waiting);
+}
+.stateSwatch.done {
+  --swatch: var(--done);
+}
 .inspectBtn circle {
   fill: var(--active);
   stroke: var(--vscode-editor-background);
