@@ -40,6 +40,7 @@ function openInspector(node) {
   markNode(previous)
   markNode(node)
   elements.inspectorBox.hidden = false
+  renderInspectorLights(node)
   renderInspector()
   elements.inspector.scrollTop = 0
 }
@@ -54,6 +55,21 @@ function closeInspector() {
   state.inspected = null
   if (state.trace) markNode(previous)
   elements.inspectorBox.hidden = true
+}
+
+// Mesmo farol do nó, sempre visível no topo do inspetor.
+function renderInspectorLights(node) {
+  const pill = document.createElement('div')
+  pill.className = 'lights'
+  for (const entry of stateSteps(node)) {
+    const dot = document.createElement('button')
+    dot.className = `lightDot ${entry.name}`
+    dot.title = entry.label
+    dot.setAttribute('aria-label', entry.label)
+    dot.addEventListener('click', () => goTo(entry.step, true))
+    pill.append(dot)
+  }
+  elements.inspectorLights.replaceChildren(pill)
 }
 
 function renderInspector() {

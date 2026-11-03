@@ -44,6 +44,7 @@ for (const id of [
   'stack',
   'inspectorBox',
   'inspector',
+  'inspectorLights',
   'inspectorClose',
   'inspectorResizer',
   'sidebarResizer',
