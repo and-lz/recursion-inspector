@@ -3,6 +3,7 @@
   --waiting: #e0a526;
   --done: #4cb36b;
   --error: #f0545a;
+  --inspect: #22d3ee;
   --radius: 8px;
   --border: var(--vscode-panel-border, rgba(128, 128, 128, 0.3));
   --surface: color-mix(in srgb, var(--vscode-foreground) 5%, var(--vscode-editor-background));
@@ -709,4 +710,15 @@ aside[hidden] {
 }
 #inspectorBox {
   border-left: 1px solid var(--border);
+}
+.node.inspected rect {
+  stroke: var(--inspect);
+  stroke-width: 3;
+  filter: drop-shadow(0 0 6px var(--inspect)) drop-shadow(0 0 14px var(--inspect));
+  animation: inspectGlow 1.8s ease-in-out infinite;
+}
+@keyframes inspectGlow {
+  50% {
+    filter: drop-shadow(0 0 3px var(--inspect)) drop-shadow(0 0 7px var(--inspect));
+  }
 }

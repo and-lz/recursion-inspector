@@ -26,15 +26,27 @@ function describeNodeBrief(node, step) {
   ].join('')
 }
 
+// Reaplica a classe do nó para ligar/desligar o brilho de "em inspeção".
+function markNode(node) {
+  if (!node) return
+  const lastEvent = state.step > 0 ? state.trace.events[state.step - 1] : null
+  updateNodeClass(node, nodeState(node, state.step, lastEvent))
+}
+
 function openInspector(node) {
+  const previous = state.inspected
   state.inspected = node
+  markNode(previous)
+  markNode(node)
   elements.inspectorBox.hidden = false
   renderInspector()
   elements.inspector.scrollTop = 0
 }
 
 function closeInspector() {
+  const previous = state.inspected
   state.inspected = null
+  if (state.trace) markNode(previous)
   elements.inspectorBox.hidden = true
 }
 

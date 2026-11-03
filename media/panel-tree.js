@@ -188,7 +188,7 @@ function edgeDirection(node, lastEvent) {
 }
 
 function updateNodeClass(node, stateName) {
-  const className = `node ${stateName}${node.isBase ? ' base' : ''}`
+  const className = `node ${stateName}${node.isBase ? ' base' : ''}${node === state.inspected ? ' inspected' : ''}`
   if (className === node.className) return
   node.className = className
   node.element.setAttribute('class', className)
