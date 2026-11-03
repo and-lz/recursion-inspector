@@ -120,8 +120,8 @@ function checkIncrementalRender(sandbox) {
   )
 }
 
-// Árvore larga (muitas folhas) gira para rolagem vertical; árvore pequena fica em pé.
-async function testOrientation() {
+// Árvore larga (muitas folhas) vira lista indentada com texto: cabe na largura, rola na vertical.
+async function testOutline() {
   const source =
     'function fib(n) {\n  if (n < 2) return n\n  return fib(n - 1) + fib(n - 2)\n}\nfib(12)'
   const fn = findRecursiveFunctions(source)[0]
@@ -139,15 +139,15 @@ async function testOrientation() {
       `(() => {
         state.zoom = ${zoom}
         relayoutTree()
-        return JSON.stringify([state.trace.horizontal, state.treeSize.width, state.treeSize.height])
+        return JSON.stringify([state.trace.outline, state.treeSize.width, state.treeSize.height])
       })()`,
       cache.sandbox,
     )
   for (const zoom of [0.2, 1]) {
-    const [horizontal, width, height] = JSON.parse(report(zoom))
-    assert.strictEqual(horizontal, true, `zoom ${zoom}: gira`)
+    const [outline, width, height] = JSON.parse(report(zoom))
+    assert.strictEqual(outline, true, `zoom ${zoom}: lista indentada`)
+    assert.ok(width <= 1000, `zoom ${zoom}: cabe na largura (${width})`)
     assert.ok(height > width, `zoom ${zoom}: mais alta que larga (${width}x${height})`)
-    assert.ok(width <= 1000, `zoom ${zoom}: layout cabe na largura`)
   }
 }
 
@@ -234,7 +234,7 @@ async function main() {
   assert.ok(cache.vars.innerHTML.includes('teste'), cache.vars.innerHTML)
   checkIncrementalRender(cache.sandbox)
   await testLocals()
-  await testOrientation()
+  await testOutline()
   const hoverable = cache.svgElements.filter((element) => element.listeners.mouseenter)
   assert.ok(hoverable.length > 0, 'nós da árvore têm tooltip')
   hoverable[0].listeners.mouseenter({ currentTarget: hoverable[0], clientX: 10, clientY: 10 })

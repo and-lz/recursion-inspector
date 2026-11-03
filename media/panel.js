@@ -27,10 +27,9 @@ function render(previousStep) {
 
 // Ao acabar, o foco vai para o primeiro nó (a raiz): topo e centro da árvore.
 function showTreeTop() {
-  const horizontal = state.trace.horizontal
   state.trace.rootNode.element.scrollIntoView({
-    block: horizontal ? 'center' : 'start',
-    inline: horizontal ? 'start' : 'center',
+    block: 'start',
+    inline: state.trace.outline ? 'start' : 'center',
   })
 }
 

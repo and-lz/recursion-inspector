@@ -25,64 +25,69 @@ function widestNode(order) {
   return longest * NODE_WIDTH_CHAR + 32
 }
 
-// Zoom baixo troca o desenho: nós viram quadradinhos e o espaçamento encolhe de verdade,
-// em vez de só escalar o layout largo (que deixaria tudo esparso e ilegível).
-// Nunca há rolagem horizontal: se a árvore em pé não cabe na largura, gira (profundidade no
-// eixo X, folhas empilhadas no Y) e, se nem assim cabe, o desenho é reduzido (ver drawScale).
 function availableWidth() {
   return Math.max(elements.treeWrap.clientWidth - SCROLLBAR_ALLOWANCE, MIN_AVAILABLE_WIDTH)
 }
 
-function arrange(trace, order, leaves, compact) {
-  const nodeWidth = compact ? DOT_SIZE : widestNode(order)
-  const margin = compact ? DOT_MARGIN : MARGIN
-  const top = compact ? DOT_MARGIN : TOP_MARGIN
-  const levels = trace.maxDepth + 1
-
-  const upright = {
-    slotStep: nodeWidth + (compact ? DOT_GAP : SLOT_GAP),
-    levelStep: compact ? DOT_SIZE + DOT_LEVEL_GAP : NODE_HEIGHT + LEVEL_GAP,
-  }
-  const width = margin * 2 + leaves * upright.slotStep
-  const height = top + margin + levels * upright.levelStep
-  const levelStep = nodeWidth + (compact ? DOT_LEVEL_GAP : LEVEL_GAP_X)
-  const rotatedWidth = margin * 2 + levels * levelStep
-  const horizontal = width > availableWidth() && rotatedWidth < width
-
-  trace.horizontal = horizontal
-  if (!horizontal) {
-    for (const node of order) {
-      node.x = margin + node.slot * upright.slotStep
-      node.y = top + node.depth * upright.levelStep
-    }
-    return { nodeWidth, width, height, order, edgeGap: (nodeWidth + SLOT_GAP) / 2 }
-  }
-
-  const slotStep = compact ? DOT_SIZE + DOT_GAP : NODE_HEIGHT + SLOT_GAP_Y
+// Em pé: folhas lado a lado, profundidade para baixo.
+function arrangeUpright(order, leaves, levels, size) {
+  const { nodeWidth, margin, top, compact } = size
+  const slotStep = nodeWidth + (compact ? DOT_GAP : SLOT_GAP)
+  const levelStep = compact ? DOT_SIZE + DOT_LEVEL_GAP : NODE_HEIGHT + LEVEL_GAP
   for (const node of order) {
-    node.x = margin + node.depth * levelStep
-    node.y = top + node.slot * slotStep
+    node.x = margin + node.slot * slotStep
+    node.y = top + node.depth * levelStep
   }
   return {
-    nodeWidth,
-    width: rotatedWidth,
-    height: top + margin + leaves * slotStep,
-    order,
-    edgeGap: LEVEL_GAP_X,
+    width: margin * 2 + leaves * slotStep,
+    height: top + margin + levels * levelStep,
+    edgeGap: (nodeWidth + SLOT_GAP) / 2,
   }
 }
 
-// Se nem girada a árvore com texto cabe na largura, usa as bolinhas em escala 1:1 (denso) em vez
-// de encolher o texto até sumir; a rolagem vertical dá conta do tamanho.
+// Em lista indentada: um nó por linha (ordem de visita), recuo por profundidade. A largura
+// não depende do número de nós: o recuo encolhe até a árvore caber, e a rolagem é só vertical.
+function arrangeOutline(trace, order, size) {
+  const { nodeWidth, margin, top, compact } = size
+  const levels = trace.maxDepth + 1
+  const rowStep = compact ? DOT_SIZE + DOT_GAP : NODE_HEIGHT + OUTLINE_ROW_GAP
+  const room = availableWidth() - margin * 2 - nodeWidth - EDGE_LABEL_WIDTH
+  const maxIndent = compact ? DOT_SIZE + DOT_LEVEL_GAP : OUTLINE_INDENT
+  const indent = Math.max(OUTLINE_MIN_INDENT, Math.min(maxIndent, room / levels))
+  trace.indent = indent
+
+  let row = 0
+  const pending = [trace.rootNode]
+  while (pending.length) {
+    const node = pending.pop()
+    node.x = margin + node.depth * indent
+    node.y = top + row++ * rowStep
+    for (let index = node.children.length - 1; index >= 0; index--)
+      pending.push(node.children[index])
+  }
+  return {
+    width: margin * 2 + (levels - 1) * indent + nodeWidth + EDGE_LABEL_WIDTH,
+    height: top + margin + order.length * rowStep,
+    edgeGap: EDGE_LABEL_WIDTH,
+  }
+}
+
+// Nunca há rolagem horizontal em 100%: se a árvore em pé não cabe na largura, vira lista
+// indentada (com texto, um nó por linha) em vez de encolher o desenho.
+// Zoom baixo troca o desenho: nós viram quadradinhos e o espaçamento encolhe de verdade.
 function layout(trace) {
   const { order, leaves } = assignSlots(trace)
-  trace.dense = false
-  if (state.zoom >= LOW_DETAIL_ZOOM) {
-    const detailed = arrange(trace, order, leaves, false)
-    if (detailed.width <= availableWidth()) return detailed
-    trace.dense = true
+  const compact = isCompact()
+  const size = {
+    nodeWidth: compact ? DOT_SIZE : widestNode(order),
+    margin: compact ? DOT_MARGIN : MARGIN,
+    top: compact ? DOT_MARGIN : TOP_MARGIN,
+    compact,
   }
-  return arrange(trace, order, leaves, true)
+  const upright = arrangeUpright(order, leaves, trace.maxDepth + 1, size)
+  trace.outline = upright.width > availableWidth()
+  const result = trace.outline ? arrangeOutline(trace, order, size) : upright
+  return { ...result, nodeWidth: size.nodeWidth, order }
 }
 
 function nodeHeight(node) {
@@ -103,18 +108,17 @@ function placeNode(node, nodeWidth) {
   node.picker = null
 }
 
-// Vertical: sai da base do pai e chega no topo do filho. Horizontal: da direita para a esquerda.
+// Em pé: sai da base do pai e chega no topo do filho. Em lista: cotovelo do tronco do pai até
+// o filho, com o valor devolvido à direita do nó.
 function edgeGeometry(node, nodeWidth) {
   const parent = node.parent
-  if (state.trace.horizontal) {
-    const startX = parent.x + nodeWidth
-    const startY = parent.y + parent.height / 2
+  if (state.trace.outline) {
+    const trunkX = parent.x + state.trace.indent / 2
     const endY = node.y + node.height / 2
-    const middleX = (startX + node.x) / 2
     return {
-      path: `M${startX},${startY} C${middleX},${startY} ${middleX},${endY} ${node.x},${endY}`,
-      labelX: middleX,
-      labelY: (startY + endY) / 2 - 4,
+      path: `M${trunkX},${parent.y + parent.height} V${endY} H${node.x}`,
+      labelX: node.x + nodeWidth + EDGE_LABEL_WIDTH / 2,
+      labelY: endY + 4,
     }
   }
   const startX = parent.x + nodeWidth / 2
@@ -129,9 +133,14 @@ function edgeGeometry(node, nodeWidth) {
 }
 
 function placeEdge(node, nodeWidth) {
-  if (!node.parent) {
+  if (!node.parent && !state.trace.outline) {
     node.edgeValue.setAttribute('x', node.x + nodeWidth / 2)
     node.edgeValue.setAttribute('y', node.y - 6)
+    return
+  }
+  if (!node.parent) {
+    node.edgeValue.setAttribute('x', node.x + nodeWidth + EDGE_LABEL_WIDTH / 2)
+    node.edgeValue.setAttribute('y', node.y + node.height / 2 + 4)
     return
   }
   const { path, labelX, labelY } = edgeGeometry(node, nodeWidth)
