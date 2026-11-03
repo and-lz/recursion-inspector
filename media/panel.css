@@ -889,6 +889,51 @@ body.vscode-high-contrast-light {
   --code-keyword: #6f2286;
   --code-call: #0c497a;
 }
+@media (color-gamut: p3) {
+  :root {
+    --active: oklch(0.658 0.192 261);
+    --waiting: oklch(0.758 0.177 81);
+    --done: oklch(0.688 0.223 151);
+    --error: oklch(0.658 0.222 22);
+    --role-propagated: oklch(0.759 0.17 207);
+    --role-combined: oklch(0.711 0.202 304);
+    --role-memo: oklch(0.735 0.223 351);
+    --active-text: oklch(0.83 0.09 261);
+    --waiting-text: oklch(0.83 0.195 81);
+    --done-text: oklch(0.8 0.2 151);
+    --error-text: oklch(0.84 0.11 22);
+    --role-propagated-text: oklch(0.81 0.185 207);
+    --role-combined-text: oklch(0.84 0.105 304);
+    --role-memo-text: oklch(0.84 0.135 351);
+    --code-string: oklch(0.81 0.2 136);
+    --code-number: oklch(0.835 0.15 65);
+    --code-literal: oklch(0.835 0.15 65);
+    --code-keyword: oklch(0.84 0.135 318);
+    --code-call: oklch(0.825 0.1 244);
+  }
+  body.vscode-light,
+  body.vscode-high-contrast-light {
+    --active: oklch(0.405 0.2 261);
+    --waiting: oklch(0.4 0.095 81);
+    --done: oklch(0.38 0.14 151);
+    --error: oklch(0.41 0.185 22);
+    --role-propagated: oklch(0.385 0.085 207);
+    --role-combined: oklch(0.415 0.2 304);
+    --role-memo: oklch(0.415 0.19 351);
+    --active-text: oklch(0.405 0.2 261);
+    --waiting-text: oklch(0.4 0.095 81);
+    --done-text: oklch(0.38 0.14 151);
+    --error-text: oklch(0.41 0.185 22);
+    --role-propagated-text: oklch(0.385 0.085 207);
+    --role-combined-text: oklch(0.415 0.2 304);
+    --role-memo-text: oklch(0.415 0.19 351);
+    --code-string: oklch(0.385 0.135 136);
+    --code-number: oklch(0.4 0.1 65);
+    --code-literal: oklch(0.4 0.1 65);
+    --code-keyword: oklch(0.415 0.2 318);
+    --code-call: oklch(0.395 0.125 244);
+  }
+}
 code,
 .tipValue {
   font-variant-ligatures: none;
