@@ -11,6 +11,7 @@ const PANEL_SCRIPTS = [
   'panel-state.js',
   'panel-syntax.js',
   'panel-tree.js',
+  'panel-render.js',
   'panel-zoom.js',
   'panel-details.js',
   'panel-inspector.js',
@@ -86,7 +87,25 @@ function loadPanel(payload) {
   vm.runInNewContext(source, sandbox)
   onMessage({ data: { type: 'data', payload } })
   cache.svgElements = svgElements
+  cache.sandbox = sandbox
   return cache
+}
+
+// Saltos de passo (incremental) têm de dar o mesmo desenho que a varredura completa.
+function checkIncrementalRender(sandbox) {
+  vm.runInContext(
+    `(() => {
+      const snapshot = () =>
+        JSON.stringify([...state.trace.nodes.values()].map((node) => [node.className, node.edgeClass, node.edgeValueClass]))
+      for (const step of [0, 3, 4, 10, 2, 18, 17, 5, 0, 6, 7, 18]) {
+        goTo(step, true)
+        const incremental = snapshot()
+        renderTree(step)
+        if (snapshot() !== incremental) throw new Error('render incremental diverge no passo ' + step)
+      }
+    })()`,
+    sandbox,
+  )
 }
 
 async function testLocals() {
@@ -170,6 +189,7 @@ async function main() {
   assert.ok(cache.explainText.innerHTML.includes('n &lt; 2'), 'cita a condição do caso base')
   assert.ok(cache.explainText.innerHTML.includes('n = 1'), 'cita o valor do parâmetro')
   assert.ok(cache.vars.innerHTML.includes('teste'), cache.vars.innerHTML)
+  checkIncrementalRender(cache.sandbox)
   await testLocals()
   const hoverable = cache.svgElements.filter((element) => element.listeners.mouseenter)
   assert.ok(hoverable.length > 0, 'nós da árvore têm tooltip')

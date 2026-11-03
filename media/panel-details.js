@@ -272,18 +272,18 @@ function describeNode(node, step) {
 }
 
 function buildLog(trace) {
-  elements.log.replaceChildren()
-  trace.events.forEach((event, index) => {
+  const rows = trace.events.map((event, index) => {
     const node = trace.nodes.get(event.id)
     const row = document.createElement('div')
     row.className = 'row'
+    row.step = index + 1
     row.style.paddingLeft = `${4 + Math.min(node.depth, 20) * 10}px`
     if (event.t === 'c') row.textContent = `▶ ${callText(node, 's')}`
     if (event.t === 'r') row.textContent = `◀ ${callText(node, 's')} → ${event.v.s}`
     if (event.t === 't') row.textContent = `✖ ${event.msg}`
-    row.addEventListener('click', () => goTo(index + 1, true))
-    elements.log.append(row)
+    return row
   })
+  elements.log.replaceChildren(...rows)
 }
 
 function renderLog(previousStep, step) {

@@ -150,7 +150,14 @@ function buildNodeElement(node, nodeWidth, nodeLayer) {
   label.textContent = shorten(argsText(node, 's'), MAX_ARGS)
   node.retText = svg('text', { x: 22, y: 31, class: 'ret' })
   node.element.append(label, node.retText)
-  node.element.append(buildStatePicker(node, nodeWidth))
+  // O farol só é montado no primeiro hover: com milhares de nós, montar todos custa caro.
+  if (!isCompact()) {
+    node.element.addEventListener(
+      'mouseenter',
+      () => node.element.append(buildStatePicker(node, nodeWidth)),
+      { once: true },
+    )
+  }
   attachTooltip(node.element, node)
   node.element.addEventListener('click', () => toggleInspector(node))
   nodeLayer.append(node.element)
@@ -217,79 +224,4 @@ function buildTree(trace) {
   }
 
   trace.nodeWidth = nodeWidth
-}
-
-function nodeState(node, step, lastEvent) {
-  if (node.callIndex >= step) return 'hidden'
-  if (lastEvent && lastEvent.id === node.id) {
-    if (lastEvent.t === 'c') return 'active'
-    return lastEvent.t === 'r' ? 'returning' : 'error'
-  }
-  if (node.endIndex < step) return node.kind === 'throw' ? 'error' : 'done'
-  return 'waiting'
-}
-
-function returnText(node, stateName) {
-  if (stateName === 'hidden' || stateName === 'active' || stateName === 'waiting') return ''
-  if (node.kind !== 'throw') return ''
-  return `✖ ${shorten(node.message, 22)}`
-}
-
-// Objeto/array que não cabe na aresta vira um resumo; o conteúdo fica no hover.
-const COLLAPSED = { '{': '{}', '[': '[]' }
-
-function edgeValueText(node, returned) {
-  if (!returned) return ''
-  if (node.kind === 'throw') return '✖'
-  const text = node.value.s
-  if (text.length <= node.edgeChars) return text
-  const summary = COLLAPSED[text[0]]
-  return summary ?? shorten(text, node.edgeChars)
-}
-
-function edgeDirection(node, lastEvent) {
-  if (!lastEvent || lastEvent.id !== node.id) return ''
-  return lastEvent.t === 'c' ? ' descending' : ' ascending'
-}
-
-function updateNodeClass(node, stateName) {
-  const className = `node ${stateName}${node.isBase ? ' base' : ''}${node === state.inspected ? ' inspected' : ''}`
-  if (className === node.className) return
-  node.className = className
-  node.element.setAttribute('class', className)
-  node.retText.textContent = returnText(node, stateName)
-}
-
-function updateEdgeClass(node, stateName, lastEvent) {
-  if (!node.edge) return
-  const edgeClass = `edge${stateName === 'hidden' ? ' hidden' : ''}${edgeDirection(node, lastEvent)}`
-  if (edgeClass === node.edgeClass) return
-  node.edgeClass = edgeClass
-  node.edge.setAttribute('class', edgeClass)
-}
-
-function updateEdgeValue(node, stateName) {
-  const returned = stateName === 'done' || stateName === 'returning' || stateName === 'error'
-  const className = `edgeValue${returned ? '' : ' hidden'}${stateName === 'returning' ? ' latest' : ''}${stateName === 'error' ? ' failed' : ''}`
-  if (className === node.edgeValueClass) return
-  node.edgeValueClass = className
-  node.edgeValue.setAttribute('class', className)
-  node.edgeValue.textContent = edgeValueText(node, returned)
-}
-
-function renderTree(step) {
-  const trace = state.trace
-  const lastEvent = step > 0 ? trace.events[step - 1] : null
-  let focus = null
-
-  for (const node of trace.nodes.values()) {
-    const stateName = nodeState(node, step, lastEvent)
-    updateNodeClass(node, stateName)
-    if (stateName === 'active' || stateName === 'returning' || stateName === 'error') focus = node
-    updateEdgeValue(node, stateName)
-    updateEdgeClass(node, stateName, lastEvent)
-  }
-
-  if (focus) focus.element.scrollIntoView({ block: 'nearest', inline: 'nearest' })
-  return focus
 }

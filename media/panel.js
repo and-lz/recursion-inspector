@@ -4,7 +4,8 @@ function render(previousStep) {
   const step = state.step
   const trace = state.trace
   const lastEvent = step > 0 ? trace.events[step - 1] : null
-  const focus = renderTree(step)
+  const focus = renderTree(step, previousStep)
+  if (step === trace.events.length && step !== previousStep) showTreeTop()
 
   elements.explainText.innerHTML = narrate(step)
   renderSummary(step)
@@ -22,6 +23,13 @@ function render(previousStep) {
     type: 'line',
     line: lastEvent && focus ? focus.line || state.data.fnLine : null,
   })
+}
+
+// Ao acabar, a raiz (topo, centro da árvore) fica à vista.
+function showTreeTop() {
+  const wrap = elements.treeWrap
+  wrap.scrollTop = 0
+  wrap.scrollLeft = (wrap.scrollWidth - wrap.clientWidth) / 2
 }
 
 function goTo(step, userAction) {
@@ -185,6 +193,10 @@ document.addEventListener('click', (event) => {
 })
 
 elements.rootSelect.addEventListener('change', () => selectRoot(Number(elements.rootSelect.value)))
+elements.log.addEventListener('click', (event) => {
+  const row = event.target.closest('.row')
+  if (row) goTo(row.step, true)
+})
 elements.slider.addEventListener('input', () => goTo(Number(elements.slider.value), true))
 
 const MIN_PANE_WIDTH = 200

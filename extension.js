@@ -10,12 +10,37 @@ const PANEL_SCRIPTS = [
   'panel-state.js',
   'panel-syntax.js',
   'panel-tree.js',
+  'panel-render.js',
   'panel-zoom.js',
   'panel-details.js',
   'panel-inspector.js',
   'panel-tooltip.js',
   'panel.js',
 ]
+
+const TRACE_CACHE_SIZE = 8
+
+// Mesmo código instrumentado => mesmo trace: reabrir ou reinspecionar sem editar não reexecuta.
+const traceCache = new Map()
+
+async function cachedTrace(code) {
+  if (traceCache.has(code)) {
+    const hit = traceCache.get(code)
+    traceCache.delete(code)
+    traceCache.set(code, hit)
+    return hit
+  }
+  const result = await vscode.window.withProgress(
+    {
+      location: vscode.ProgressLocation.Notification,
+      title: 'Executando e rastreando a recursão…',
+    },
+    () => runTrace(code),
+  )
+  traceCache.set(code, result)
+  if (traceCache.size > TRACE_CACHE_SIZE) traceCache.delete(traceCache.keys().next().value)
+  return result
+}
 
 let panel = null
 let pendingPayload = null
@@ -145,13 +170,7 @@ async function inspect(context, uriString, start) {
 
   let result
   try {
-    result = await vscode.window.withProgress(
-      {
-        location: vscode.ProgressLocation.Notification,
-        title: 'Executando e rastreando a recursão…',
-      },
-      () => runTrace(instrumented.code),
-    )
+    result = await cachedTrace(instrumented.code)
   } catch (error) {
     vscode.window.showErrorMessage(`Recursion Inspector: ${error.message}`)
     return
