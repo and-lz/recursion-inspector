@@ -587,13 +587,6 @@ header {
 .stateSwatch:hover circle {
   filter: brightness(1.2);
 }
-.stateSwatch.disabled {
-  cursor: default;
-}
-.stateSwatch.disabled circle {
-  --swatch: color-mix(in srgb, var(--vscode-foreground) 25%, var(--vscode-editor-background));
-  filter: none;
-}
 .stateSwatch.active {
   --swatch: var(--active);
 }

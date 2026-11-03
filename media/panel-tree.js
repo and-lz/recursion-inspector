@@ -71,18 +71,18 @@ function buildInspectButton(node, nodeWidth) {
   return button
 }
 
-// Passo em que o nó está em cada estado; folha nunca espera filhos (step null, selo apagado).
+// Passo em que o nó está em cada estado; folha nunca espera filhos, então não tem esse estado.
 function stateSteps(node) {
   const [firstChild] = node.children
   return [
     { name: 'active', label: 'chamando agora', step: node.callIndex + 1 },
-    {
+    firstChild && {
       name: 'waiting',
-      label: firstChild ? 'esperando os filhos' : 'esperando os filhos (sem filhos)',
-      step: firstChild ? firstChild.callIndex + 1 : null,
+      label: 'esperando os filhos',
+      step: firstChild.callIndex + 1,
     },
     { name: 'done', label: 'já retornou', step: node.endIndex + 1 },
-  ]
+  ].filter(Boolean)
 }
 
 // Pílula com três bolinhas estilo semáforo do macOS, a cavalo na borda de baixo; só no hover.
@@ -99,7 +99,7 @@ function buildStatePicker(node, nodeWidth) {
   picker.append(svg('rect', { width: pillWidth, height: pillHeight, rx: pillHeight / 2 }))
   steps.forEach((entry, index) => {
     const swatch = svg('g', {
-      class: `stateSwatch ${entry.name}${entry.step === null ? ' disabled' : ''}`,
+      class: `stateSwatch ${entry.name}`,
       transform: `translate(${STATE_PILL_PADDING + STATE_DOT_RADIUS + index * pitch},${pillHeight / 2})`,
     })
     const title = svg('title')
@@ -107,7 +107,6 @@ function buildStatePicker(node, nodeWidth) {
     swatch.append(title, svg('circle', { r: STATE_DOT_RADIUS }))
     swatch.addEventListener('click', (event) => {
       event.stopPropagation()
-      if (entry.step === null) return
       goTo(entry.step, true)
     })
     picker.append(swatch)
