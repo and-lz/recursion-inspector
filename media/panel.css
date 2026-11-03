@@ -1087,7 +1087,7 @@ code,
 }
 .srcRef:hover {
   outline: 1px dashed var(--vscode-focusBorder, currentColor);
-  outline-offset: 2px;
+  outline-offset: -1px;
 }
 .srcBlock {
   margin-top: 6px;
