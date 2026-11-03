@@ -8,22 +8,12 @@ const RECURSION_KINDS = {
   multiple: 'múltipla',
   mutual: 'mútua',
   tail: 'de cauda',
-  'top-down': 'top-down',
-  'bottom-up': 'bottom-up',
-  'pre-order': 'pré-ordem',
-  'in-order': 'em ordem',
-  'post-order': 'pós-ordem',
 }
 
 // Cada rótulo com o motivo específico: o trecho do código da função que o causou.
 function recursionKinds(recursion) {
   if (!recursion) return []
-  const ids = [
-    recursion.shape,
-    recursion.tail ? 'tail' : null,
-    recursion.direction,
-    ...recursion.orders,
-  ]
+  const ids = [recursion.shape, recursion.tail ? 'tail' : null]
   return ids.filter(Boolean).map((id) => ({ label: RECURSION_KINDS[id], hint: recursion.why[id] }))
 }
 
@@ -53,4 +43,13 @@ function renderKinds(recursion) {
       return chip
     }),
   )
+}
+
+/* ---------- fase da visita ---------- */
+
+// Em que momento da visita a chamada está, sabido pela ordem dos eventos: ao entrar (antes
+// dos filhos), entre dois filhos e na volta (depois de todos).
+function phaseNote(phase, text) {
+  const labels = { pre: 'Pré-ordem', in: 'Em ordem', post: 'Pós-ordem' }
+  return `<span class="phase">${labels[phase]}</span>: ${text}`
 }

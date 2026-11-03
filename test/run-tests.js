@@ -218,44 +218,21 @@ function testRecursionKinds() {
   const source = `
 function fib(n) { if (n < 2) return n; return fib(n - 1) + fib(n - 2) }
 function fact(n, acc = 1) { if (n === 0) return acc; return fact(n - 1, acc * n) }
-function preorder(node) { if (!node) return; visit(node.val); preorder(node.left); preorder(node.right) }
-function inorder(node) { if (!node) return; inorder(node.left); visit(node.val); inorder(node.right) }
-function postorder(node) { if (!node) return; postorder(node.left); postorder(node.right); visit(node.val) }
-function inorderList(node) { if (!node) return []; return [...inorderList(node.left), node.val, ...inorderList(node.right)] }
+function dfs(node) { for (const next of node.next) { dfs(next) } }
 function isEven(n) { return n === 0 ? true : isOdd(n - 1) }
 function isOdd(n) { return n === 0 ? false : isEven(n - 1) }
 `
   const kinds = Object.fromEntries(
     findRecursiveFunctions(source).map((fn) => {
       const { why, ...recursion } = fn.recursion
-      assert.deepStrictEqual(
-        Object.keys(why).sort(),
-        [
-          recursion.shape,
-          ...(recursion.tail ? ['tail'] : []),
-          ...(recursion.direction ? [recursion.direction] : []),
-          ...recursion.orders,
-        ].sort(),
-      )
+      const ids = [recursion.shape, ...(recursion.tail ? ['tail'] : [])]
+      assert.deepStrictEqual(Object.keys(why).sort(), ids.sort())
       return [fn.name, recursion]
     }),
   )
-  assert.deepStrictEqual(kinds.fib, {
-    shape: 'binary',
-    tail: false,
-    direction: 'bottom-up',
-    orders: ['post-order'],
-  })
-  assert.deepStrictEqual(kinds.fact, {
-    shape: 'linear',
-    tail: true,
-    direction: 'top-down',
-    orders: [],
-  })
-  assert.deepStrictEqual(kinds.preorder.orders, ['pre-order'])
-  assert.deepStrictEqual(kinds.inorder.orders, ['in-order'])
-  assert.deepStrictEqual(kinds.postorder.orders, ['post-order'])
-  assert.deepStrictEqual(kinds.inorderList.orders, ['in-order', 'post-order'])
+  assert.deepStrictEqual(kinds.fib, { shape: 'binary', tail: false })
+  assert.deepStrictEqual(kinds.fact, { shape: 'linear', tail: true })
+  assert.deepStrictEqual(kinds.dfs, { shape: 'multiple', tail: false })
   assert.strictEqual(kinds.isEven.shape, 'mutual')
 }
 

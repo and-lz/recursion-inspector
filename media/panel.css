@@ -137,6 +137,10 @@ button:hover {
   padding: 0 4px;
   border-radius: 3px;
 }
+#explainText .phase {
+  font-weight: 600;
+  color: var(--active-text, inherit);
+}
 #summary {
   margin-top: 6px;
 }

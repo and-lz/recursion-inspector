@@ -50,7 +50,8 @@ function narrate(step) {
   const parentCall = node.parent ? code(callText(node.parent, 's')) : null
   const call = code(callText(node, 'f'))
 
-  if (event.t === 'c') return narrateCall(node, call, parentCall, step)
+  if (event.t === 'c')
+    return `${narrateCall(node, call, parentCall, step)} ${phaseNote('pre', 'acabou de entrar, ainda sem chamar nenhum filho.')}`
 
   if (event.t === 't')
     return `<b>Erro.</b> ${call} lançou: ${code(event.msg)}. O erro sobe para quem chamou.`
@@ -69,7 +70,7 @@ function narrateReturn(node, event, step) {
   const next = trace.events[step]
   const hasNext = next && next.t === 'c' && node.parent && next.parent === node.parent.id
   const followUp = hasNext
-    ? ` Em seguida ${parentCall} faz a ${ordinal(node.parent.children.length)} chamada recursiva.`
+    ? ` Em seguida ${parentCall} faz a ${ordinal(node.parent.children.length)} chamada recursiva. ${phaseNote('in', `${parentCall} está entre a ${ordinal(node.parent.children.length - 1)} e a ${ordinal(node.parent.children.length)} chamada.`)}`
     : ''
 
   if (node.children.length === 0) {
@@ -86,7 +87,7 @@ function narrateReturn(node, event, step) {
     .map((local) => code(`${local.name} = ${shorten(local.v.f, 30)}`))
     .join(', ')
   const kept = locals ? ` Variáveis guardadas: ${locals}.` : ''
-  return `<b>Voltando.</b> Todas as ${node.children.length} chamadas filhas de ${call} terminaram (resultados: ${code(parts)}).${kept} Combinando, ela ${destination}.${followUp}`
+  return `<b>Voltando.</b> Todas as ${node.children.length} chamadas filhas de ${call} terminaram (resultados: ${code(parts)}).${kept} Combinando, ela ${destination}. ${phaseNote('post', 'todos os filhos voltaram.')}${followUp}`
 }
 
 function renderSummary(step) {
