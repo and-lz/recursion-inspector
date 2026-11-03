@@ -20,7 +20,7 @@ function tipRow(name, value) {
 // Bloco colapsável; o estado aberto/fechado sobrevive à re-renderização a cada passo.
 function tipFold(key, label, count, body) {
   const open = state.inspectorOpen.has(key) ? ' open' : ''
-  return `<details class="tipFold" data-fold="${key}"${open}><summary>${label}<small>${count}</small></summary>${body}</details>`
+  return `<details class="tipFold" data-fold="${key}"${open}><summary><span>${label}</span><small>${count}</small></summary>${body}</details>`
 }
 
 // Teste que decidiu o retorno: o último verdadeiro.
