@@ -56,9 +56,11 @@ function tipConditions(node, step, returned) {
   const conds = condsAt(node, step)
   const decisive = returned ? decisiveCond(conds) : null
   const showFinal = returned && node.returnSrc
+  // O teste decisivo vai junto do retorno final, em vez de ficar separado no seu grupo de origem.
+  const groupOf = (cond) => (showFinal && cond === decisive ? 'final' : condGroup(node, cond))
   return COND_GROUPS.map(({ key, label }) => {
     const rows = conds
-      .filter((cond) => condGroup(node, cond) === key)
+      .filter((cond) => groupOf(cond) === key)
       .map((cond) => tipCondRow(cond, decisive))
     if (key === 'final' && showFinal)
       rows.push(
