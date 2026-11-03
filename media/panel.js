@@ -25,11 +25,9 @@ function render(previousStep) {
   })
 }
 
-// Ao acabar, a raiz (topo, centro da árvore) fica à vista.
+// Ao acabar, o foco vai para o primeiro nó (a raiz): topo e centro da árvore.
 function showTreeTop() {
-  const wrap = elements.treeWrap
-  wrap.scrollTop = 0
-  wrap.scrollLeft = (wrap.scrollWidth - wrap.clientWidth) / 2
+  state.trace.rootNode.element.scrollIntoView({ block: 'start', inline: 'center' })
 }
 
 function goTo(step, userAction) {
