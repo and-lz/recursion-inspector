@@ -23,7 +23,7 @@
             "fullscreen",
             "beside"
           ],
-          "default": "beside",
+          "default": "tab",
           "description": "tab: painel abre como uma nova aba no grupo atual do editor. fullscreen: painel ocupa todo o editor (sidebar escondida). beside: painel ao lado do código, com a linha atual destacada."
         }
       }
