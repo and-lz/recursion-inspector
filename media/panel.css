@@ -713,9 +713,6 @@ header {
 }
 .tipResult {
   font-family: var(--vscode-editor-font-family);
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--done);
   white-space: pre-wrap;
   word-break: break-all;
 }
@@ -816,7 +813,5 @@ code,
 }
 .tipSection .tipResult {
   margin: 0;
-  padding: 4px 0 4px 12px;
-  border-left: 3px solid var(--done);
   line-height: 1.5;
 }
