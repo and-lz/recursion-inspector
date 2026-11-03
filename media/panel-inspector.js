@@ -22,7 +22,7 @@ function describeNodeBrief(node, step) {
     `<header class="tipHead">${code(shorten(callText(node, 'f'), 120))}<span class="tipState ${stateName}">${STATE_LABELS[stateName]}</span></header>`,
     `<div class="tipMeta">${meta.join(' · ')}</div>`,
     briefOutcome(node, stateName),
-    '<div class="tipNote">botão <b>i</b> do nó abre o detalhe na lateral</div>',
+    '<div class="tipNote">clique no nó para abrir o detalhe na lateral; o farol entra nos estados</div>',
   ].join('')
 }
 
@@ -42,6 +42,11 @@ function openInspector(node) {
   elements.inspectorBox.hidden = false
   renderInspector()
   elements.inspector.scrollTop = 0
+}
+
+function toggleInspector(node) {
+  if (state.inspected === node && !elements.inspectorBox.hidden) closeInspector()
+  else openInspector(node)
 }
 
 function closeInspector() {

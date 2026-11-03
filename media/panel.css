@@ -553,62 +553,6 @@ header {
   font-family: var(--vscode-editor-font-family);
   word-break: break-all;
 }
-.inspectBtn {
-  opacity: 0;
-  cursor: pointer;
-  transition: opacity 0.15s;
-}
-.node:hover .inspectBtn {
-  opacity: 1;
-}
-.statePicker {
-  opacity: 0;
-  transition: opacity 0.15s;
-}
-.node:hover .statePicker {
-  opacity: 1;
-}
-.node .statePicker > rect {
-  fill: var(--vscode-editor-background);
-  stroke: var(--border);
-  stroke-width: 1;
-  filter: none;
-  animation: none;
-}
-.stateSwatch {
-  cursor: pointer;
-}
-.stateSwatch circle {
-  fill: var(--swatch);
-  stroke: color-mix(in srgb, var(--swatch) 60%, black);
-  stroke-width: 0.5;
-  transition:
-    fill 0.15s,
-    filter 0.15s;
-}
-.stateSwatch:hover circle {
-  filter: brightness(1.2);
-}
-.stateSwatch.active {
-  --swatch: var(--active);
-}
-.stateSwatch.waiting {
-  --swatch: var(--waiting);
-}
-.stateSwatch.done {
-  --swatch: var(--done);
-}
-.inspectBtn circle {
-  fill: var(--active);
-  stroke: var(--vscode-editor-background);
-  stroke-width: 1.5;
-}
-.inspectBtn text {
-  fill: #fff;
-  font-size: 11px;
-  font-weight: 700;
-  text-anchor: middle;
-}
 #tooltip code {
   font-family: var(--vscode-editor-font-family);
   word-break: break-all;
