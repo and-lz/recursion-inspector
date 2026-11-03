@@ -12,26 +12,6 @@
     <div id="empty">Carregando…</div>
     <div id="rootPicker" hidden></div>
     <div id="app" hidden>
-      <header>
-        <h1 id="title"></h1>
-        <button id="menuButton" title="Opções" aria-label="Opções">☰</button>
-        <div id="menu" hidden>
-          <label
-            >Execução:
-            <select id="rootSelect"></select
-          ></label>
-          <label
-            >Modo:
-            <select id="modeSelect">
-              <option value="explained">Explicado (devagar)</option>
-              <option value="compact">Compacto (até 2s no total)</option>
-            </select>
-          </label>
-          <label><input type="checkbox" id="showExplain" /> Explicação</label>
-          <label><input type="checkbox" id="showReturns" /> Faixa de retornos</label>
-          <label><input type="checkbox" id="showSidebar" checked /> Painel lateral</label>
-        </div>
-      </header>
       <section id="explain" hidden>
         <div id="explainText"></div>
         <div id="summary"></div>
@@ -50,7 +30,10 @@
         <span id="fnLegend"></span>
       </div>
       <main>
-        <div id="treeWrap"><svg id="tree"></svg></div>
+        <div id="treeWrap">
+          <h1 id="title"></h1>
+          <svg id="tree"></svg>
+        </div>
         <aside id="inspectorBox" hidden>
           <div class="resizer" id="inspectorResizer"></div>
           <h2>
@@ -87,6 +70,24 @@
         </select>
         <button id="zoomReset" title="Resetar zoom (100%)">100%</button>
         <span id="counter"></span>
+        <button id="menuButton" title="Opções" aria-label="Opções">☰</button>
+        <div id="menu" hidden>
+          <label
+            >Execução:
+            <select id="rootSelect"></select
+          ></label>
+          <label
+            >Modo:
+            <select id="modeSelect">
+              <option value="explained">Explicado (devagar)</option>
+              <option value="compact">Compacto (até 2s no total)</option>
+            </select>
+          </label>
+          <label><input type="checkbox" id="showExplain" /> Explicação</label>
+          <label><input type="checkbox" id="showReturns" /> Faixa de retornos</label>
+          <label><input type="checkbox" id="showSidebar" checked /> Painel lateral</label>
+          <label><input type="checkbox" id="showLegend" /> Legenda</label>
+        </div>
       </footer>
       <div id="tooltip" hidden></div>
     </div>

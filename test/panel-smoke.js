@@ -127,19 +127,25 @@ function checkIncrementalRender(sandbox) {
 }
 
 // Árvore larga (muitas folhas) vira lista indentada com texto: cabe na largura, rola na vertical.
+// Dados que a extensão manda ao painel para a função `fn` já executada.
+function payloadFor(fn, result, fileName) {
+  const { name, params } = fn
+  return {
+    fnName: name,
+    fnLine: 1,
+    params,
+    functionParams: { [name]: params },
+    fileName,
+    ...result,
+  }
+}
+
 async function testOutline() {
   const source =
     'function fib(n) {\n  if (n < 2) return n\n  return fib(n - 1) + fib(n - 2)\n}\nfib(12)'
   const fn = findRecursiveFunctions(source)[0]
   const result = await runTrace(instrument(source, fn.start).code)
-  const cache = loadPanel({
-    fnName: 'fib',
-    fnLine: 1,
-    params: fn.params,
-    functionParams: { fib: fn.params },
-    fileName: 'w.js',
-    ...result,
-  })
+  const cache = loadPanel(payloadFor(fn, result, 'w.js'))
   const report = (zoom) =>
     vm.runInContext(
       `(() => {
@@ -212,14 +218,7 @@ async function testSummary() {
     'function fib(n) {\n  if (n < 2) return n\n  return fib(n - 1) + fib(n - 2)\n}\nfib(10)'
   const fn = findRecursiveFunctions(source)[0]
   const result = await runTrace(instrument(source, fn.start).code)
-  const payload = {
-    fnName: 'fib',
-    fnLine: 1,
-    params: fn.params,
-    functionParams: { fib: fn.params },
-    fileName: 'w.js',
-    ...result,
-  }
+  const payload = payloadFor(fn, result, 'w.js')
   const summary = loadPanel(payload)
   assert.strictEqual(summary.viewMode.hidden, false, 'toggle aparece em trace grande')
   assert.ok(summary.slider.max < result.events.length, 'resumido corta eventos')
@@ -230,19 +229,29 @@ async function testSummary() {
   assert.strictEqual(full.slider.max, result.events.length)
 }
 
+// Estrutura recebida como argumento aparece desenhada no quadro.
+async function testBoard() {
+  const source = `class Node { constructor(val) { this.val = val; this.left = null; this.right = null } }
+function count(root) { return root ? 1 + count(root.left) + count(root.right) : 0 }
+const root = new Node(3)
+root.left = new Node(5)
+count(root)`
+  const fn = findRecursiveFunctions(source)[0]
+  const result = await runTrace(instrument(source, fn.start).code)
+  const cache = loadPanel(payloadFor(fn, result, 'b.js'))
+  cache.slider.value = '1'
+  cache.slider.listeners.input()
+  assert.strictEqual(cache.board.hidden, false, 'quadro visível')
+  assert.ok(cache.board.innerHTML.includes('└─ L 5'), cache.board.innerHTML)
+}
+
 async function main() {
+  await testBoard()
   const source =
     'function fib(n) {\n  if (n < 2) return n\n  return fib(n - 1) + fib(n - 2)\n}\nfib(4)\nfib(1)'
   const fn = findRecursiveFunctions(source)[0]
   const result = await runTrace(instrument(source, fn.start).code)
-  const payload = {
-    fnName: 'fib',
-    fnLine: 1,
-    params: fn.params,
-    functionParams: { fib: fn.params },
-    fileName: 'x.js',
-    ...result,
-  }
+  const payload = payloadFor(fn, result, 'x.js')
 
   const cache = loadPanel(payload)
   assert.strictEqual(cache.rootSelect.children.length, 2)

@@ -77,23 +77,60 @@ function buildStatePicker(node, nodeWidth) {
   return picker
 }
 
+// Raiz: cada valor precede de um badge discreto com o nome do parâmetro. O badge fica numa
+// camada própria (`node.badges`) que `placeNode` alinha à linha de base do texto.
+function buildRootLabel(node, budget, omittedText, textX) {
+  node.badges = svg('g', { class: 'paramBadges' })
+  let cursor = textX
+  let remaining = budget
+  for (const [index, arg] of node.args.entries()) {
+    if (remaining <= 0) break
+    const name = paramName(node, index)
+    const badgeWidth = name.length * BADGE_CHAR_WIDTH + BADGE_PADDING * 2
+    node.badges.append(
+      svg('rect', { class: 'paramBadge', x: cursor, y: -11, width: badgeWidth, height: 15 }),
+      Object.assign(svg('text', { class: 'paramName', x: cursor + BADGE_PADDING }), {
+        textContent: name,
+      }),
+    )
+    cursor += badgeWidth + BADGE_GAP
+    const value = shorten(arg.s, remaining)
+    const tspan = svg('tspan', { x: cursor })
+    tspan.textContent = value
+    node.label.append(tspan)
+    cursor += value.length * NODE_WIDTH_CHAR + ARG_GAP
+    remaining -= value.length
+  }
+  if (omittedText) {
+    const tspan = svg('tspan', { x: cursor })
+    tspan.textContent = omittedText.trim()
+    node.label.append(tspan)
+  }
+}
+
 // Cria os elementos de um nó sem geometria: `placeNode` posiciona (e reposiciona no zoom).
-function buildNodeElement(node, nodeLayer) {
+function buildNodeElement(node, nodeLayer, showTag) {
   node.isBase = node.children.length === 0 && !node.omitted
   node.element = svg('g', { class: 'node hidden' })
   node.rect = svg('rect')
+  const textX = showTag ? 22 : 12
   node.tag = svg('circle', { class: 'tag', r: 4, cx: 12 })
   node.tag.style.fill = functionColor(node.fn)
-  node.label = svg('text', { x: 22 })
+  node.label = svg('text', { x: textX })
   const omittedText = node.omitted ? ` …+${node.omitted}` : ''
-  node.label.textContent = shorten(argsText(node, 's'), MAX_ARGS - omittedText.length) + omittedText
-  node.retText = svg('text', { x: 22, y: 31, class: 'ret' })
-  node.element.append(node.rect, node.tag, node.label, node.retText)
+  const budget = labelLimit(node) - omittedText.length
+  if (node.parent) node.label.textContent = shorten(labelText(node), budget) + omittedText
+  else buildRootLabel(node, budget, omittedText, textX)
+  node.retText = svg('text', { x: textX, y: 31, class: 'ret' })
+  node.element.append(node.rect)
+  if (showTag) node.element.append(node.tag)
+  if (node.badges) node.element.append(node.badges)
+  node.element.append(node.label, node.retText)
   // O farol só é montado no primeiro hover: com milhares de nós, montar todos custa caro.
   node.picker = null
   node.element.addEventListener('mouseenter', () => {
     if (node.picker) return
-    node.picker = buildStatePicker(node, state.trace.nodeWidth)
+    node.picker = buildStatePicker(node, node.width)
     node.element.append(node.picker)
   })
   attachTooltip(node.element, node)
@@ -103,11 +140,9 @@ function buildNodeElement(node, nodeLayer) {
 }
 
 function buildEdgeElements(node, edgeLayer, valueLayer) {
-  if (node.parent) {
-    node.edge = svg('path', { class: 'edge hidden' })
-    node.edgeClass = 'edge hidden'
-    edgeLayer.append(node.edge)
-  }
+  node.edge = svg('path', { class: 'edge hidden' })
+  node.edgeClass = 'edge hidden'
+  edgeLayer.append(node.edge)
   node.edgeValue = svg('text', { class: 'edgeValue hidden', 'text-anchor': 'middle' })
   node.edgeValueClass = 'edgeValue hidden'
   attachTooltip(node.edgeValue, node, describeEdgeValue)
@@ -125,8 +160,10 @@ function buildTree(trace) {
   state.viewport = viewport
 
   const { order } = layout(trace)
+  // Com uma função só, a bolinha de cor não distingue nada: some e o texto sobe para a borda.
+  const showTag = new Set(order.map((node) => node.fn)).size > 1
   for (const node of order) {
-    buildNodeElement(node, nodeLayer)
+    buildNodeElement(node, nodeLayer, showTag)
     buildEdgeElements(node, edgeLayer, valueLayer)
   }
   placeTree(trace)

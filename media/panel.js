@@ -161,6 +161,7 @@ function applyVisibility() {
   elements.explain.hidden = !elements.showExplain.checked
   elements.returns.hidden = !elements.showReturns.checked
   elements.sidebar.hidden = !elements.showSidebar.checked
+  elements.legend.hidden = !elements.showLegend.checked
   if (elements.sidebar.hidden) {
     elements.sidebar.style.width = ''
     elements.sidebar.style.maxWidth = ''
@@ -175,6 +176,7 @@ function saveSettings() {
       showExplain: elements.showExplain.checked,
       showReturns: elements.showReturns.checked,
       showSidebar: elements.showSidebar.checked,
+      showLegend: elements.showLegend.checked,
       summarized: elements.viewMode.value === 'summary',
     },
   })
@@ -185,6 +187,7 @@ function applySettings(settings) {
   elements.showExplain.checked = Boolean(settings.showExplain)
   elements.showReturns.checked = Boolean(settings.showReturns)
   elements.showSidebar.checked = settings.showSidebar !== false
+  elements.showLegend.checked = Boolean(settings.showLegend)
   state.summarized = settings.summarized !== false
   elements.viewMode.value = state.summarized ? 'summary' : 'full'
   applyVisibility()
@@ -195,6 +198,7 @@ for (const control of [
   elements.showExplain,
   elements.showReturns,
   elements.showSidebar,
+  elements.showLegend,
   elements.modeSelect,
   elements.viewMode,
 ]) {
@@ -203,6 +207,7 @@ for (const control of [
 elements.showExplain.addEventListener('change', applyVisibility)
 elements.showReturns.addEventListener('change', applyVisibility)
 elements.showSidebar.addEventListener('change', applyVisibility)
+elements.showLegend.addEventListener('change', applyVisibility)
 
 elements.menuButton.addEventListener('click', (event) => {
   event.stopPropagation()

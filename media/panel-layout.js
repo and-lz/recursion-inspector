@@ -17,12 +17,17 @@ function assignSlots(trace) {
   return { order, leaves }
 }
 
+function textWidth(node) {
+  const length = Math.min(labelText(node).length, labelLimit(node))
+  return Math.max(length, 10) * NODE_WIDTH_CHAR + 32
+}
+
+// Largura uniforme dos nós; a raiz pode ser mais larga que as demais.
 function widestNode(order) {
-  const longest = order.reduce(
-    (max, node) => Math.max(max, Math.min(argsText(node, 's').length, MAX_ARGS)),
-    10,
+  return order.reduce(
+    (max, node) => (node.parent ? Math.max(max, textWidth(node)) : max),
+    10 * NODE_WIDTH_CHAR + 32,
   )
-  return longest * NODE_WIDTH_CHAR + 32
 }
 
 function availableWidth() {
@@ -38,8 +43,13 @@ function arrangeUpright(order, leaves, levels, size) {
     node.x = margin + node.slot * slotStep
     node.y = top + node.depth * levelStep
   }
+  // Raiz mais larga continua centrada no mesmo ponto; se vazar pela esquerda, a árvore inteira desloca.
+  const root = order[0]
+  root.x -= (root.width - nodeWidth) / 2
+  const shift = Math.max(0, margin - root.x)
+  if (shift) for (const node of order) node.x += shift
   return {
-    width: margin * 2 + leaves * slotStep,
+    width: Math.max(margin * 2 + leaves * slotStep + shift, root.x + root.width + margin),
     height: top + margin + levels * levelStep,
     edgeGap: (nodeWidth + SLOT_GAP) / 2,
   }
@@ -66,7 +76,12 @@ function arrangeOutline(trace, order, size) {
       pending.push(node.children[index])
   }
   return {
-    width: margin * 2 + (levels - 1) * indent + nodeWidth + EDGE_LABEL_WIDTH,
+    width:
+      margin * 2 +
+      (levels - 1) * indent +
+      nodeWidth +
+      EDGE_LABEL_WIDTH +
+      (trace.rootNode.width - nodeWidth),
     height: top + margin + order.length * rowStep,
     edgeGap: EDGE_LABEL_WIDTH,
   }
@@ -84,6 +99,9 @@ function layout(trace) {
     top: compact ? DOT_MARGIN : TOP_MARGIN,
     compact,
   }
+  const root = trace.rootNode
+  for (const node of order) node.width = size.nodeWidth
+  if (!compact) root.width = Math.max(size.nodeWidth, textWidth(root))
   const upright = arrangeUpright(order, leaves, trace.maxDepth + 1, size)
   trace.outline = upright.width > availableWidth()
   const result = trace.outline ? arrangeOutline(trace, order, size) : upright
@@ -95,14 +113,15 @@ function nodeHeight(node) {
   return node.kind === 'throw' ? NODE_HEIGHT : COMPACT_HEIGHT
 }
 
-function placeNode(node, nodeWidth) {
+function placeNode(node) {
   node.height = nodeHeight(node)
   const tall = node.height === NODE_HEIGHT
   node.element.setAttribute('transform', `translate(${node.x},${node.y})`)
-  node.rect.setAttribute('width', nodeWidth)
+  node.rect.setAttribute('width', node.width)
   node.rect.setAttribute('height', node.height)
   node.tag.setAttribute('cy', tall ? 12 : 14)
   node.label.setAttribute('y', tall ? 16 : 18)
+  if (node.badges) node.badges.setAttribute('transform', `translate(0,${tall ? 16 : 18})`)
   // O farol depende do tamanho do nó: some e é remontado no próximo hover.
   if (node.picker) node.picker.remove()
   node.picker = null
@@ -110,20 +129,20 @@ function placeNode(node, nodeWidth) {
 
 // Em pé: sai da base do pai e chega no topo do filho. Em lista: cotovelo do tronco do pai até
 // o filho, com o valor devolvido à direita do nó.
-function edgeGeometry(node, nodeWidth) {
+function edgeGeometry(node) {
   const parent = node.parent
   if (state.trace.outline) {
     const trunkX = parent.x + state.trace.indent / 2
     const endY = node.y + node.height / 2
     return {
       path: `M${trunkX},${parent.y + parent.height} V${endY} H${node.x}`,
-      labelX: node.x + nodeWidth + EDGE_LABEL_WIDTH / 2,
+      labelX: node.x + node.width + EDGE_LABEL_WIDTH / 2,
       labelY: endY + 4,
     }
   }
-  const startX = parent.x + nodeWidth / 2
+  const startX = parent.x + parent.width / 2
   const startY = parent.y + parent.height
-  const endX = node.x + nodeWidth / 2
+  const endX = node.x + node.width / 2
   const middleY = (startY + node.y) / 2
   return {
     path: `M${startX},${startY} C${startX},${middleY} ${endX},${middleY} ${endX},${node.y}`,
@@ -132,18 +151,21 @@ function edgeGeometry(node, nodeWidth) {
   }
 }
 
-function placeEdge(node, nodeWidth) {
+function placeEdge(node) {
+  // A raiz não tem pai nem seta: em pé, o retorno fica logo abaixo dela.
   if (!node.parent && !state.trace.outline) {
-    node.edgeValue.setAttribute('x', node.x + nodeWidth / 2)
-    node.edgeValue.setAttribute('y', node.y - 6)
+    node.edge.setAttribute('d', '')
+    node.edgeValue.setAttribute('x', node.x + node.width / 2)
+    node.edgeValue.setAttribute('y', node.y + node.height + ROOT_VALUE_DROP)
     return
   }
   if (!node.parent) {
-    node.edgeValue.setAttribute('x', node.x + nodeWidth + EDGE_LABEL_WIDTH / 2)
+    node.edge.setAttribute('d', '')
+    node.edgeValue.setAttribute('x', node.x + node.width + EDGE_LABEL_WIDTH / 2)
     node.edgeValue.setAttribute('y', node.y + node.height / 2 + 4)
     return
   }
-  const { path, labelX, labelY } = edgeGeometry(node, nodeWidth)
+  const { path, labelX, labelY } = edgeGeometry(node)
   node.edge.setAttribute('d', path)
   node.edgeValue.setAttribute('x', labelX)
   node.edgeValue.setAttribute('y', labelY)
@@ -160,10 +182,10 @@ function placeTree(trace) {
   // Alturas primeiro: a aresta parte da base do pai.
   for (const node of order) {
     node.edgeChars = edgeChars
-    placeNode(node, nodeWidth)
+    placeNode(node)
   }
   for (const node of order) {
-    placeEdge(node, nodeWidth)
+    placeEdge(node)
     if (node.edgeValue.textContent) node.edgeValue.textContent = edgeValueText(node, true)
   }
   applyZoom()

@@ -9,7 +9,14 @@ const EDGE_CHAR_WIDTH = 7.5
 const MIN_EDGE_CHARS = 4
 const MARGIN = 20
 const TOP_MARGIN = 48
+const ROOT_VALUE_DROP = 28
 const MAX_ARGS = 30
+// A raiz tem folga para mostrar mais: só trunca quando fica enorme.
+const MAX_ROOT_ARGS = 90
+const BADGE_CHAR_WIDTH = 5.6
+const BADGE_PADDING = 5
+const BADGE_GAP = 5
+const ARG_GAP = 9
 const STATE_DOT_RADIUS = 4.5
 const STATE_DOT_GAP = 6
 const STATE_PILL_PADDING = 8
@@ -47,6 +54,8 @@ for (const id of [
   'showExplain',
   'showReturns',
   'showSidebar',
+  'showLegend',
+  'legend',
   'sidebar',
   'explain',
   'returns',
@@ -128,6 +137,20 @@ function shorten(text, max) {
 
 function argsText(node, field) {
   return node.args.map((arg) => arg[field]).join(', ')
+}
+
+function paramName(node, index) {
+  return (state.data.functionParams[node.fn] || [])[index] || `arg${index}`
+}
+
+// Texto do rótulo do nó. Na raiz, cada valor vem com o nome do parâmetro (desenhado como badge).
+function labelText(node) {
+  if (node.parent) return argsText(node, 's')
+  return node.args.map((arg, index) => `${paramName(node, index)}  ${arg.s}`).join(' ')
+}
+
+function labelLimit(node) {
+  return node.parent ? MAX_ARGS : MAX_ROOT_ARGS
 }
 
 function callText(node, field) {
