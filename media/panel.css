@@ -714,16 +714,16 @@ aside[hidden] {
   border-left: 1px solid var(--border);
 }
 .node.inspected rect {
-  --glow: var(--vscode-focusBorder, var(--active));
-  stroke: var(--glow);
-  stroke-width: 2.5;
-  filter: drop-shadow(0 0 4px color-mix(in srgb, var(--glow) 70%, transparent))
+  --glow: var(--vscode-foreground);
+  stroke: color-mix(in srgb, var(--glow) 80%, transparent);
+  stroke-width: 2;
+  filter: drop-shadow(0 0 3px color-mix(in srgb, var(--glow) 35%, transparent))
     drop-shadow(0 1px 3px rgba(0, 0, 0, 0.25));
-  animation: inspectPulse 1.6s ease-in-out infinite;
+  animation: inspectPulse 2s ease-in-out infinite;
 }
 @keyframes inspectPulse {
   50% {
-    filter: drop-shadow(0 0 10px color-mix(in srgb, var(--glow) 90%, transparent))
+    filter: drop-shadow(0 0 6px color-mix(in srgb, var(--glow) 55%, transparent))
       drop-shadow(0 1px 3px rgba(0, 0, 0, 0.25));
   }
 }
