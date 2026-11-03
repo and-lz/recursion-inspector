@@ -555,10 +555,12 @@ header {
 }
 .statePicker {
   opacity: 0;
+  pointer-events: none;
   transition: opacity 0.15s;
 }
 .node:hover .statePicker {
   opacity: 1;
+  pointer-events: auto;
 }
 .node .statePicker > rect {
   fill: var(--vscode-editor-background);
