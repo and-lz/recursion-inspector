@@ -27,7 +27,7 @@ function highlight(text) {
 
 /* ---------- quebra de linha de valores (estilo prettier) ---------- */
 
-const CLOSERS = { '{': '}', '[': ']', '(': ')' }
+const PRETTY_CLOSERS = { '{': '}', '[': ']', '(': ')' }
 const PRETTY_INDENT = 2
 const PRETTY_WIDTH = 36
 
@@ -66,11 +66,11 @@ function parseItems(text, start, closer) {
       index += literal.length
       continue
     }
-    if (CLOSERS[char]) {
+    if (PRETTY_CLOSERS[char]) {
       flush()
-      const inner = parseItems(text, index + 1, CLOSERS[char])
+      const inner = parseItems(text, index + 1, PRETTY_CLOSERS[char])
       if (!inner) return null
-      parts.push({ open: char, close: CLOSERS[char], items: inner.items })
+      parts.push({ open: char, close: PRETTY_CLOSERS[char], items: inner.items })
       index = inner.end
       continue
     }
