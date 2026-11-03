@@ -62,21 +62,21 @@ function applyPendingZoom() {
   const fractionY = (clientY - before.top) / before.height
   state.zoom = newZoom
   if (isCompact() === wasCompact) applyZoom()
-  else rebuildTree()
+  else relayoutTree()
   const after = elements.tree.getBoundingClientRect()
   elements.treeWrap.scrollLeft += after.left + fractionX * after.width - clientX
   elements.treeWrap.scrollTop += after.top + fractionY * after.height - clientY
 }
 
-function rebuildTree() {
-  buildTree(state.trace)
-  renderTree(state.step)
+// Troca de modo (detalhe/compacto): só reposiciona, os elementos continuam os mesmos.
+function relayoutTree() {
+  placeTree(state.trace)
 }
 
 function resetZoom() {
   if (!state.viewport || state.zoom === 1) return
   const wasCompact = isCompact()
   state.zoom = 1
-  if (wasCompact) rebuildTree()
+  if (wasCompact) relayoutTree()
   else applyZoom()
 }

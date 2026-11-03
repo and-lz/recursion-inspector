@@ -103,6 +103,15 @@ function checkIncrementalRender(sandbox) {
         renderTree(step)
         if (snapshot() !== incremental) throw new Error('render incremental diverge no passo ' + step)
       }
+      const elementsBefore = state.trace.rootNode.element
+      state.zoom = 0.2
+      relayoutTree()
+      const compactHeight = state.trace.rootNode.height
+      state.zoom = 1
+      relayoutTree()
+      if (state.trace.rootNode.element !== elementsBefore) throw new Error('relayout recriou o nó')
+      if (compactHeight !== DOT_SIZE || state.trace.rootNode.height === DOT_SIZE)
+        throw new Error('relayout não trocou o tamanho do nó')
     })()`,
     sandbox,
   )

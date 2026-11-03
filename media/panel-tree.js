@@ -133,95 +133,110 @@ function nodeHeight(node) {
   return node.kind === 'throw' ? NODE_HEIGHT : COMPACT_HEIGHT
 }
 
-function buildNodeElement(node, nodeWidth, nodeLayer) {
+// Cria os elementos de um nó sem geometria: `placeNode` posiciona (e reposiciona no zoom).
+function buildNodeElement(node, nodeLayer) {
   node.isBase = node.children.length === 0
-  node.height = nodeHeight(node)
-  node.element = svg('g', { class: 'node hidden', transform: `translate(${node.x},${node.y})` })
-  node.element.append(svg('rect', { width: nodeWidth, height: node.height }))
-  const tag = svg('circle', {
-    class: 'tag',
-    r: 4,
-    cx: 12,
-    cy: node.height === NODE_HEIGHT ? 12 : 14,
-  })
-  tag.style.fill = functionColor(node.fn)
-  node.element.append(tag)
-  const label = svg('text', { x: 22, y: node.height === NODE_HEIGHT ? 16 : 18 })
-  label.textContent = shorten(argsText(node, 's'), MAX_ARGS)
+  node.element = svg('g', { class: 'node hidden' })
+  node.rect = svg('rect')
+  node.tag = svg('circle', { class: 'tag', r: 4, cx: 12 })
+  node.tag.style.fill = functionColor(node.fn)
+  node.label = svg('text', { x: 22 })
+  node.label.textContent = shorten(argsText(node, 's'), MAX_ARGS)
   node.retText = svg('text', { x: 22, y: 31, class: 'ret' })
-  node.element.append(label, node.retText)
+  node.element.append(node.rect, node.tag, node.label, node.retText)
   // O farol só é montado no primeiro hover: com milhares de nós, montar todos custa caro.
-  if (!isCompact()) {
-    node.element.addEventListener(
-      'mouseenter',
-      () => node.element.append(buildStatePicker(node, nodeWidth)),
-      { once: true },
-    )
-  }
+  node.picker = null
+  node.element.addEventListener('mouseenter', () => {
+    if (node.picker) return
+    node.picker = buildStatePicker(node, state.trace.nodeWidth)
+    node.element.append(node.picker)
+  })
   attachTooltip(node.element, node)
   node.element.addEventListener('click', () => toggleInspector(node))
   nodeLayer.append(node.element)
   node.className = 'node hidden'
 }
 
-function buildTree(trace) {
-  const tree = elements.tree
-  tree.replaceChildren()
+function buildEdgeElements(node, edgeLayer, valueLayer) {
+  if (node.parent) {
+    node.edge = svg('path', { class: 'edge hidden' })
+    node.edgeClass = 'edge hidden'
+    edgeLayer.append(node.edge)
+  }
+  node.edgeValue = svg('text', { class: 'edgeValue hidden', 'text-anchor': 'middle' })
+  node.edgeValueClass = 'edgeValue hidden'
+  attachTooltip(node.edgeValue, node, describeEdgeValue)
+  valueLayer.append(node.edgeValue)
+}
+
+function placeNode(node, nodeWidth) {
+  node.height = nodeHeight(node)
+  const tall = node.height === NODE_HEIGHT
+  node.element.setAttribute('transform', `translate(${node.x},${node.y})`)
+  node.rect.setAttribute('width', nodeWidth)
+  node.rect.setAttribute('height', node.height)
+  node.tag.setAttribute('cy', tall ? 12 : 14)
+  node.label.setAttribute('y', tall ? 16 : 18)
+  // O farol depende do tamanho do nó: some e é remontado no próximo hover.
+  if (node.picker) node.picker.remove()
+  node.picker = null
+}
+
+function placeEdge(node, nodeWidth) {
+  if (!node.parent) {
+    node.edgeValue.setAttribute('x', node.x + nodeWidth / 2)
+    node.edgeValue.setAttribute('y', node.y - 6)
+    return
+  }
+  const startX = node.parent.x + nodeWidth / 2
+  const startY = node.parent.y + node.parent.height
+  const endX = node.x + nodeWidth / 2
+  const middleY = (startY + node.y) / 2
+  node.edge.setAttribute(
+    'd',
+    `M${startX},${startY} C${startX},${middleY} ${endX},${middleY} ${endX},${node.y}`,
+  )
+  node.edgeValue.setAttribute('x', (startX + endX) / 2)
+  node.edgeValue.setAttribute('y', middleY + 4)
+}
+
+// Calcula o layout do modo atual e move os elementos que já existem.
+function placeTree(trace) {
   const { nodeWidth, width, height, order } = layout(trace)
   state.treeSize = { width, height }
-
-  const viewport = svg('g')
-  const edgeLayer = svg('g')
-  const nodeLayer = svg('g')
-  const valueLayer = svg('g')
-  viewport.append(edgeLayer, nodeLayer, valueLayer)
-  tree.append(viewport)
-  state.viewport = viewport
-  applyZoom()
+  trace.nodeWidth = nodeWidth
 
   // Rótulos de irmãos ficam a ~metade de um slot um do outro: o texto cabe nessa folga.
   const edgeChars = Math.max(
     MIN_EDGE_CHARS,
     Math.floor((nodeWidth + SLOT_GAP) / 2 / EDGE_CHAR_WIDTH) - 1,
   )
-
+  // Alturas primeiro: a aresta parte da base do pai.
   for (const node of order) {
     node.edgeChars = edgeChars
-    buildNodeElement(node, nodeWidth, nodeLayer)
-
-    if (!node.parent) {
-      node.edgeValue = svg('text', {
-        class: 'edgeValue hidden',
-        'text-anchor': 'middle',
-        x: node.x + nodeWidth / 2,
-        y: node.y - 6,
-      })
-      node.edgeValueClass = 'edgeValue hidden'
-      attachTooltip(node.edgeValue, node, describeEdgeValue)
-      valueLayer.append(node.edgeValue)
-      continue
-    }
-    const startX = node.parent.x + nodeWidth / 2
-    const startY = node.parent.y + node.parent.height
-    const endX = node.x + nodeWidth / 2
-    const middleY = (startY + node.y) / 2
-    node.edge = svg('path', {
-      class: 'edge hidden',
-      d: `M${startX},${startY} C${startX},${middleY} ${endX},${middleY} ${endX},${node.y}`,
-    })
-    node.edgeClass = 'edge hidden'
-    edgeLayer.append(node.edge)
-
-    node.edgeValue = svg('text', {
-      class: 'edgeValue hidden',
-      'text-anchor': 'middle',
-      x: (startX + endX) / 2,
-      y: middleY + 4,
-    })
-    node.edgeValueClass = 'edgeValue hidden'
-    attachTooltip(node.edgeValue, node, describeEdgeValue)
-    valueLayer.append(node.edgeValue)
+    placeNode(node, nodeWidth)
   }
+  for (const node of order) {
+    placeEdge(node, nodeWidth)
+    if (node.edgeValue.textContent) node.edgeValue.textContent = edgeValueText(node, true)
+  }
+  applyZoom()
+}
 
-  trace.nodeWidth = nodeWidth
+function buildTree(trace) {
+  elements.tree.replaceChildren()
+  const viewport = svg('g')
+  const edgeLayer = svg('g')
+  const nodeLayer = svg('g')
+  const valueLayer = svg('g')
+  viewport.append(edgeLayer, nodeLayer, valueLayer)
+  elements.tree.append(viewport)
+  state.viewport = viewport
+
+  const { order } = layout(trace)
+  for (const node of order) {
+    buildNodeElement(node, nodeLayer)
+    buildEdgeElements(node, edgeLayer, valueLayer)
+  }
+  placeTree(trace)
 }
