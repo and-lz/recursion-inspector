@@ -35,6 +35,7 @@ function markNode(node) {
 
 function openInspector(node) {
   const previous = state.inspected
+  if (previous === node && !elements.inspectorBox.hidden) return
   state.inspected = node
   markNode(previous)
   markNode(node)

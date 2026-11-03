@@ -12,6 +12,7 @@ function render(previousStep) {
   renderStack(focus, lastEvent)
   renderVars(focus, lastEvent, step)
   renderLog(previousStep, step)
+  if (state.inspected && focus && step !== previousStep) openInspector(focus)
   renderInspector()
   refreshTooltip()
 
