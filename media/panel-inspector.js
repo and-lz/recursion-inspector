@@ -57,19 +57,12 @@ function closeInspector() {
   elements.inspectorBox.hidden = true
 }
 
-// Mesmo farol do nó, sempre visível no topo do inspetor.
+// Mesmo farol do hover do nó, sempre visível no topo do inspetor.
 function renderInspectorLights(node) {
-  const pill = document.createElement('div')
-  pill.className = 'lights'
-  for (const entry of stateSteps(node)) {
-    const dot = document.createElement('button')
-    dot.className = `lightDot ${entry.name}`
-    dot.title = entry.label
-    dot.setAttribute('aria-label', entry.label)
-    dot.addEventListener('click', () => goTo(entry.step, true))
-    pill.append(dot)
-  }
-  elements.inspectorLights.replaceChildren(pill)
+  const lights = buildStateLights(node)
+  const canvas = svg('svg', { width: lights.width, height: lights.height })
+  canvas.append(lights.element)
+  elements.inspectorLights.replaceChildren(canvas)
 }
 
 function renderInspector() {

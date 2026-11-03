@@ -551,35 +551,7 @@ header {
 }
 #inspectorLights {
   padding: 8px 0 0;
-}
-.lights {
-  display: inline-flex;
-  gap: 6px;
-  padding: 4px 8px;
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  background: var(--vscode-editor-background);
-}
-.lightDot {
-  width: 9px;
-  height: 9px;
-  padding: 0;
-  border: 0.5px solid color-mix(in srgb, var(--swatch) 60%, black);
-  border-radius: 50%;
-  background: var(--swatch);
-  cursor: pointer;
-}
-.lightDot:hover {
-  filter: brightness(1.2);
-}
-.lightDot.active {
-  --swatch: var(--active);
-}
-.lightDot.waiting {
-  --swatch: var(--waiting);
-}
-.lightDot.done {
-  --swatch: var(--done);
+  line-height: 0;
 }
 #inspector code {
   font-family: var(--vscode-editor-font-family);
@@ -595,7 +567,8 @@ header {
   pointer-events: auto;
 }
 /* Neutra sempre: o id vence as regras de estado do nó (.node.active rect etc.). */
-#tree .node .statePicker > .statePill {
+#tree .node .stateLights > .statePill,
+#inspectorLights .stateLights > .statePill {
   fill: var(--vscode-editor-background);
   stroke: var(--border);
   stroke-width: 1;

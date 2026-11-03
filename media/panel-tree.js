@@ -70,24 +70,19 @@ function stateSteps(node) {
   ].filter(Boolean)
 }
 
-// Pílula com três bolinhas estilo semáforo do macOS, a cavalo na borda de baixo; só no hover.
-// Cada bolinha pula direto para aquele estado.
-function buildStatePicker(node, nodeWidth) {
+// Pílula com as bolinhas estilo semáforo do macOS; cada uma pula direto para aquele estado.
+// Usada no hover do nó e no topo do inspetor, igual nos dois.
+function buildStateLights(node) {
   const steps = stateSteps(node)
   const pitch = STATE_DOT_RADIUS * 2 + STATE_DOT_GAP
-  const pillWidth = (steps.length - 1) * pitch + STATE_DOT_RADIUS * 2 + STATE_PILL_PADDING * 2
-  const pillHeight = STATE_DOT_RADIUS * 2 + 8
-  const picker = svg('g', {
-    class: 'statePicker',
-    transform: `translate(${(nodeWidth - pillWidth) / 2},${node.height - pillHeight / 2 + STATE_PILL_DROP})`,
-  })
-  picker.append(
-    svg('rect', { class: 'statePill', width: pillWidth, height: pillHeight, rx: pillHeight / 2 }),
-  )
+  const width = (steps.length - 1) * pitch + STATE_DOT_RADIUS * 2 + STATE_PILL_PADDING * 2
+  const height = STATE_DOT_RADIUS * 2 + 8
+  const element = svg('g', { class: 'stateLights' })
+  element.append(svg('rect', { class: 'statePill', width, height, rx: height / 2 }))
   steps.forEach((entry, index) => {
     const swatch = svg('g', {
       class: `stateSwatch ${entry.name}`,
-      transform: `translate(${STATE_PILL_PADDING + STATE_DOT_RADIUS + index * pitch},${pillHeight / 2})`,
+      transform: `translate(${STATE_PILL_PADDING + STATE_DOT_RADIUS + index * pitch},${height / 2})`,
     })
     const title = svg('title')
     title.textContent = entry.label
@@ -96,8 +91,19 @@ function buildStatePicker(node, nodeWidth) {
       event.stopPropagation()
       goTo(entry.step, true)
     })
-    picker.append(swatch)
+    element.append(swatch)
   })
+  return { element, width, height }
+}
+
+// No nó: a cavalo na borda de baixo, só no hover.
+function buildStatePicker(node, nodeWidth) {
+  const lights = buildStateLights(node)
+  const picker = svg('g', {
+    class: 'statePicker',
+    transform: `translate(${(nodeWidth - lights.width) / 2},${node.height - lights.height / 2 + STATE_PILL_DROP})`,
+  })
+  picker.append(lights.element)
   return picker
 }
 
