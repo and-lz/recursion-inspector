@@ -184,8 +184,9 @@ main {
 aside {
   position: relative;
   flex: none;
-  width: 340px;
-  min-width: 0;
+  width: max-content;
+  min-width: 240px;
+  max-width: 45vw;
   display: flex;
   flex-direction: column;
   overflow: hidden;

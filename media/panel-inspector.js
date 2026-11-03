@@ -61,6 +61,8 @@ function closeInspector() {
   state.inspected = null
   if (state.trace) markNode(previous)
   elements.inspectorBox.hidden = true
+  elements.inspectorBox.style.width = ''
+  elements.inspectorBox.style.maxWidth = ''
 }
 
 // Mesmo farol do hover do nó, sempre visível no topo do inspetor.

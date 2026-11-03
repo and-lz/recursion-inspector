@@ -137,6 +137,10 @@ function applyVisibility() {
   elements.explain.hidden = !elements.showExplain.checked
   elements.returns.hidden = !elements.showReturns.checked
   elements.sidebar.hidden = !elements.showSidebar.checked
+  if (elements.sidebar.hidden) {
+    elements.sidebar.style.width = ''
+    elements.sidebar.style.maxWidth = ''
+  }
 }
 
 function saveSettings() {
@@ -197,6 +201,7 @@ function makeResizable(handle, pane) {
     handle.classList.add('dragging')
     const move = (moveEvent) => {
       const width = startWidth + startX - moveEvent.clientX
+      pane.style.maxWidth = 'none'
       pane.style.width = `${Math.max(MIN_PANE_WIDTH, Math.min(width, maxWidth()))}px`
     }
     const stop = () => {
