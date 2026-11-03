@@ -13,6 +13,7 @@ const MAX_ARGS = 30
 const STATE_DOT_RADIUS = 4.5
 const STATE_DOT_GAP = 6
 const STATE_PILL_PADDING = 8
+const STATE_PILL_DROP = 4
 const SVG_NS = 'http://www.w3.org/2000/svg'
 const FN_COLORS = ['#3b82f6', '#c084fc', '#f97316', '#14b8a6', '#ec4899', '#a3a3a3']
 const EXPLAINED_DELAY_MS = 1400

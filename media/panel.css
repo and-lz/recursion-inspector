@@ -568,10 +568,12 @@ header {
 .node:hover .statePicker {
   opacity: 1;
 }
-.statePicker > rect {
+.node .statePicker > rect {
   fill: var(--vscode-editor-background);
   stroke: var(--border);
   stroke-width: 1;
+  filter: none;
+  animation: none;
 }
 .stateSwatch {
   cursor: pointer;
