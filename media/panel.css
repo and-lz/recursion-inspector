@@ -616,16 +616,6 @@ footer {
   align-items: center;
   justify-content: space-between;
 }
-#inspectorClose {
-  padding: 0 6px;
-  border: none;
-  background: none;
-  color: inherit;
-  cursor: pointer;
-}
-#inspectorClose:hover {
-  opacity: 1;
-}
 .resizer {
   position: absolute;
   top: 0;

@@ -45,11 +45,7 @@ function openInspector(node) {
   elements.inspector.scrollTop = 0
 }
 
-function toggleInspector(node) {
-  if (state.inspected === node && !elements.inspectorBox.hidden) {
-    closeInspector()
-    return
-  }
+function showInspector(node) {
   openInspector(node)
   // Último estado do nó: o inspetor mostra tudo (variáveis, testes, retorno).
   const lastState = stateSteps(node).at(-1)

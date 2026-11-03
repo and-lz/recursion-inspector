@@ -261,7 +261,6 @@ function makeResizable(handle, pane) {
 makeResizable(elements.sidebarResizer, elements.sidebar)
 makeResizable(elements.inspectorResizer, elements.inspectorBox)
 
-elements.inspectorClose.addEventListener('click', closeInspector)
 elements.play.addEventListener('click', togglePlay)
 elements.modeSelect.addEventListener('change', onTimingChange)
 elements.first.addEventListener('click', () => goTo(0, true))

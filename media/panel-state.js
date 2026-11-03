@@ -74,7 +74,6 @@ for (const id of [
   'inspectorBox',
   'inspector',
   'inspectorLights',
-  'inspectorClose',
   'inspectorResizer',
   'sidebarResizer',
   'vars',

@@ -137,7 +137,7 @@ function buildNodeElement(node, nodeLayer, showTag) {
     node.element.append(node.picker)
   })
   attachTooltip(node.element, node)
-  node.element.addEventListener('click', () => toggleInspector(node))
+  node.element.addEventListener('click', () => showInspector(node))
   nodeLayer.append(node.element)
   node.className = 'node hidden'
 }
