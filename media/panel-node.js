@@ -89,9 +89,19 @@ function tipFinals(node, entryValues) {
   return tipFold('finals', 'Ao sair', `${rows.length} mudaram`, rows.join(''))
 }
 
-// O código do `return` (com o trecho devolvido) fica no fim de Testes; aqui só o valor.
+// Nome (ou expressão) devolvido, ex.: `right`; literais e valores iguais ao texto não repetem.
+function returnedName(node) {
+  const { returnSrc, returnPick } = node
+  if (!returnSrc) return ''
+  const picked = returnPick ? returnSrc.slice(returnPick.from, returnPick.to) : returnSrc
+  return picked === node.value.f ? '' : picked
+}
+
+// O código do `return` fica no fim de Testes; aqui o nome devolvido e o valor.
 function tipReturn(node) {
-  return `<div class="tipResult">${highlight(prettyValue(node.value.f, 24))}</div>`
+  const name = returnedName(node)
+  const label = name ? `<div class="tipNote">${code(shorten(name, 60))}</div>` : ''
+  return `${label}<div class="tipResult">${highlight(prettyValue(node.value.f, 24))}</div>`
 }
 
 function tipOutcome(node, stateName) {
