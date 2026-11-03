@@ -1020,3 +1020,22 @@ code,
   padding-top: 8px;
   border-top: 1px dashed var(--border);
 }
+.tipGroup {
+  margin-top: 10px;
+}
+.tipGroup:first-child {
+  margin-top: 0;
+}
+.tipGroup h5 {
+  margin: 0 0 4px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  opacity: 0.8;
+}
+.tipGroup .tipCond.tipFinal {
+  margin-top: 4px;
+  padding-top: 0;
+  border-top: none;
+}

@@ -28,20 +28,44 @@ function decisiveCond(conds) {
   return [...conds].reverse().find((cond) => cond.result) || null
 }
 
+const COND_GROUPS = [
+  { key: 'base', label: 'Caso base' },
+  { key: 'after', label: 'Depois dos filhos' },
+  { key: 'final', label: 'Retorno final' },
+]
+
+// Teste dentro da própria expressão do `return` (ex.: o `left` de `left ? left : right`).
+function isFinalCond(node, cond) {
+  return node.finalAt === cond.at && Boolean(node.returnSrc) && node.returnSrc.includes(cond.src)
+}
+
+// Antes de qualquer chamada filha = caso base; depois que algum filho foi chamado = depois dos filhos.
+function condGroup(node, cond) {
+  if (isFinalCond(node, cond)) return 'final'
+  return node.children.some((child) => child.callIndex < cond.at) ? 'after' : 'base'
+}
+
+function tipCondRow(cond, decisive) {
+  const operands = (cond.operands || []).map((operand) => tipRow(operand.src, operand.v.f))
+  const verdict = cond.result ? 'verdadeiro' : 'falso'
+  const mark = cond === decisive ? ' decisive' : ''
+  return `<div class="tipCond${mark}"><code>${highlightTerms(cond)}</code><span class="tipPill ${cond.result ? 'yes' : 'no'}">${verdict}</span></div>${operands.join('')}`
+}
+
 function tipConditions(node, step, returned) {
   const conds = condsAt(node, step)
   const decisive = returned ? decisiveCond(conds) : null
-  const rows = conds.map((cond) => {
-    const operands = (cond.operands || []).map((operand) => tipRow(operand.src, operand.v.f))
-    const verdict = cond.result ? 'verdadeiro' : 'falso'
-    const mark = cond === decisive ? ' decisive' : ''
-    return `<div class="tipCond${mark}"><code>${highlightTerms(cond)}</code><span class="tipPill ${cond.result ? 'yes' : 'no'}">${verdict}</span></div>${operands.join('')}`
-  })
-  if (returned && node.returnSrc)
-    rows.push(
-      `<div class="tipCond tipFinal">${returnCode(node)}<span class="tipPill yes">retornou</span></div>`,
-    )
-  return rows.join('')
+  const showFinal = returned && node.returnSrc
+  return COND_GROUPS.map(({ key, label }) => {
+    const rows = conds
+      .filter((cond) => condGroup(node, cond) === key)
+      .map((cond) => tipCondRow(cond, decisive))
+    if (key === 'final' && showFinal)
+      rows.push(
+        `<div class="tipCond tipFinal">${returnCode(node)}<span class="tipPill yes">retornou</span></div>`,
+      )
+    return rows.length ? `<div class="tipGroup"><h5>${label}</h5>${rows.join('')}</div>` : ''
+  }).join('')
 }
 
 function tipChildren(node, step) {

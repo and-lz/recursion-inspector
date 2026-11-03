@@ -206,6 +206,7 @@ function attachProbes(nodes, startIndex) {
       node.finals = probe.vars
       node.returnSrc = probe.src
       node.returnPick = probe.pick
+      node.finalAt = at
     } else if (probe.kind === 'var') node.locals.push({ name: probe.name, v: probe.v, at })
     else
       node.conds.push({
@@ -272,6 +273,7 @@ function buildTrace(root) {
         finals: null,
         returnSrc: null,
         returnPick: null,
+        finalAt: null,
         conds: [],
         role: null,
       }
