@@ -739,6 +739,11 @@ header {
   display: block;
   margin: 0 auto;
 }
+#tree.lowDetail text,
+#tree.lowDetail .tag,
+#tree.lowDetail .statePicker {
+  display: none;
+}
 aside[hidden] {
   display: none;
 }

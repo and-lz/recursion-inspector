@@ -225,6 +225,13 @@ elements.first.addEventListener('click', () => goTo(0, true))
 elements.prev.addEventListener('click', () => goTo(state.step - 1, true))
 elements.next.addEventListener('click', () => goTo(state.step + 1, true))
 elements.last.addEventListener('click', () => goTo(state.trace.events.length, true))
+elements.treeWrap.addEventListener(
+  'wheel',
+  (event) => {
+    if (event.ctrlKey) zoomAt(event)
+  },
+  { passive: false },
+)
 document.addEventListener('keydown', (event) => {
   if (!state.trace || event.target.tagName === 'SELECT') return
   if (event.key === 'Escape') elements.menu.hidden = true

@@ -135,13 +135,16 @@ function buildTree(trace) {
   const tree = elements.tree
   tree.replaceChildren()
   const { nodeWidth, width, height, order } = layout(trace)
-  tree.setAttribute('width', width)
-  tree.setAttribute('height', height)
+  state.treeSize = { width, height }
 
+  const viewport = svg('g')
   const edgeLayer = svg('g')
   const nodeLayer = svg('g')
   const valueLayer = svg('g')
-  tree.append(edgeLayer, nodeLayer, valueLayer)
+  viewport.append(edgeLayer, nodeLayer, valueLayer)
+  tree.append(viewport)
+  state.viewport = viewport
+  applyZoom()
 
   // Rótulos de irmãos ficam a ~metade de um slot um do outro: o texto cabe nessa folga.
   const edgeChars = Math.max(
@@ -188,6 +191,37 @@ function buildTree(trace) {
   }
 
   trace.nodeWidth = nodeWidth
+}
+
+// Escala o desenho inteiro: nós e distâncias encolhem juntos, então ficam todos próximos.
+// Abaixo de LOW_DETAIL_ZOOM o texto some e sobra só a forma da árvore.
+function applyZoom() {
+  const { width, height } = state.treeSize
+  const zoom = state.zoom
+  elements.tree.setAttribute('width', width * zoom)
+  elements.tree.setAttribute('height', height * zoom)
+  state.viewport.setAttribute('transform', `scale(${zoom})`)
+  elements.tree.classList.toggle('lowDetail', zoom < LOW_DETAIL_ZOOM)
+}
+
+// Pinça no trackpad chega como wheel com ctrlKey; mantém o ponto sob o cursor parado.
+function zoomAt(event) {
+  event.preventDefault()
+  if (!state.viewport) return
+  const oldZoom = state.zoom
+  const newZoom = Math.min(
+    MAX_ZOOM,
+    Math.max(MIN_ZOOM, oldZoom * Math.exp(-event.deltaY * ZOOM_SPEED)),
+  )
+  if (newZoom === oldZoom) return
+  const before = elements.tree.getBoundingClientRect()
+  const pointX = (event.clientX - before.left) / oldZoom
+  const pointY = (event.clientY - before.top) / oldZoom
+  state.zoom = newZoom
+  applyZoom()
+  const after = elements.tree.getBoundingClientRect()
+  elements.treeWrap.scrollLeft += after.left + pointX * newZoom - event.clientX
+  elements.treeWrap.scrollTop += after.top + pointY * newZoom - event.clientY
 }
 
 function nodeState(node, step, lastEvent) {
