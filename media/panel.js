@@ -249,8 +249,9 @@ elements.treeWrap.addEventListener(
   { passive: false },
 )
 elements.zoomReset.addEventListener('click', resetZoom)
+// A orientação e a escala dependem da largura disponível.
 window.addEventListener('resize', () => {
-  if (state.viewport && isCompact()) applyZoom()
+  if (state.viewport) relayoutTree()
 })
 document.addEventListener('keydown', (event) => {
   if (!state.trace || event.target.tagName === 'SELECT') return

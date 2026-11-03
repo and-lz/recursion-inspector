@@ -27,8 +27,12 @@ function widestNode(order) {
 
 // Zoom baixo troca o desenho: nós viram quadradinhos e o espaçamento encolhe de verdade,
 // em vez de só escalar o layout largo (que deixaria tudo esparso e ilegível).
-// Árvore muito mais larga que alta (muitas folhas) gira: profundidade no eixo X, folhas
-// empilhadas no Y, e a rolagem passa a ser vertical.
+// Nunca há rolagem horizontal: se a árvore em pé não cabe na largura, gira (profundidade no
+// eixo X, folhas empilhadas no Y) e, se nem assim cabe, o desenho é reduzido (ver drawScale).
+function availableWidth() {
+  return Math.max(elements.treeWrap.clientWidth - SCROLLBAR_ALLOWANCE, MIN_AVAILABLE_WIDTH)
+}
+
 function layout(trace) {
   const { order, leaves } = assignSlots(trace)
   const compact = isCompact()
@@ -43,7 +47,9 @@ function layout(trace) {
   }
   const width = margin * 2 + leaves * upright.slotStep
   const height = top + margin + levels * upright.levelStep
-  const horizontal = width > height * ASPECT_LIMIT
+  const levelStep = nodeWidth + (compact ? DOT_LEVEL_GAP : LEVEL_GAP_X)
+  const rotatedWidth = margin * 2 + levels * levelStep
+  const horizontal = width > availableWidth() && rotatedWidth < width
 
   trace.horizontal = horizontal
   if (!horizontal) {
@@ -54,7 +60,6 @@ function layout(trace) {
     return { nodeWidth, width, height, order, edgeGap: (nodeWidth + SLOT_GAP) / 2 }
   }
 
-  const levelStep = nodeWidth + (compact ? DOT_LEVEL_GAP : LEVEL_GAP_X)
   const slotStep = compact ? DOT_SIZE + DOT_GAP : NODE_HEIGHT + SLOT_GAP_Y
   for (const node of order) {
     node.x = margin + node.depth * levelStep
@@ -62,7 +67,7 @@ function layout(trace) {
   }
   return {
     nodeWidth,
-    width: margin * 2 + levels * levelStep,
+    width: rotatedWidth,
     height: top + margin + leaves * slotStep,
     order,
     edgeGap: LEVEL_GAP_X,
