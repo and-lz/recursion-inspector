@@ -22,6 +22,7 @@ function applyZoom() {
   elements.tree.setAttribute('height', height * scale)
   state.viewport.setAttribute('transform', `scale(${scale})`)
   elements.tree.classList.toggle('lowDetail', isCompact())
+  elements.zoomReset.textContent = `${Math.round(state.zoom * 100)}%`
 }
 
 // Pinça no trackpad chega como wheel com ctrlKey; mantém o ponto sob o cursor parado.
@@ -49,4 +50,12 @@ function zoomAt(event) {
 function rebuildTree() {
   buildTree(state.trace)
   renderTree(state.step)
+}
+
+function resetZoom() {
+  if (!state.viewport || state.zoom === 1) return
+  const wasCompact = isCompact()
+  state.zoom = 1
+  if (wasCompact) rebuildTree()
+  else applyZoom()
 }

@@ -65,6 +65,7 @@ for (const id of [
   'next',
   'last',
   'slider',
+  'zoomReset',
   'counter',
 ]) {
   elements[id] = document.getElementById(id)

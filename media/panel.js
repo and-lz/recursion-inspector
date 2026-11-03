@@ -232,6 +232,7 @@ elements.treeWrap.addEventListener(
   },
   { passive: false },
 )
+elements.zoomReset.addEventListener('click', resetZoom)
 window.addEventListener('resize', () => {
   if (state.viewport && isCompact()) applyZoom()
 })
