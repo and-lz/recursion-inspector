@@ -49,7 +49,7 @@ function tipCondRow(cond, decisive) {
   const operands = (cond.operands || []).map((operand) => tipRow(operand.src, operand.v.f))
   const verdict = cond.result ? 'verdadeiro' : 'falso'
   const mark = cond === decisive ? ' decisive' : ''
-  return `<div class="tipCond${mark}"><code>${highlightTerms(cond)}</code><span class="tipPill ${cond.result ? 'yes' : 'no'}">${verdict}</span></div>${operands.join('')}`
+  return `<div class="tipCond${mark}"><code>${highlightTerms(cond)}</code>${mark ? '<span class="srOnly">teste que levou ao retorno</span>' : ''}<span class="tipPill ${cond.result ? 'yes' : 'no'}">${verdict}</span></div>${operands.join('')}`
 }
 
 function tipConditions(node, step, returned) {

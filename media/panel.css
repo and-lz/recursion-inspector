@@ -1000,6 +1000,38 @@ code,
   text-transform: uppercase;
   letter-spacing: 0.08em;
 }
+.tipFold > summary::before {
+  content: '▸';
+  flex: none;
+  width: 14px;
+  transition: transform 0.15s;
+}
+.tipFold[open] > summary::before {
+  transform: rotate(90deg);
+}
+.tipFold > summary > :first-child {
+  margin-right: auto;
+}
+.tipFold > summary:focus-visible {
+  outline: 1px solid var(--vscode-focusBorder);
+  outline-offset: 2px;
+}
+.tipFold > summary:hover {
+  color: var(--vscode-textLink-foreground, var(--active-text));
+}
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+@media (prefers-reduced-motion: reduce) {
+  .tipFold > summary::before {
+    transition: none;
+  }
+}
 .tipFold > summary small {
   font-size: 11px;
   font-weight: 400;
@@ -1032,7 +1064,6 @@ code,
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  opacity: 0.8;
 }
 .tipGroup .tipCond.tipFinal {
   margin-top: 4px;
