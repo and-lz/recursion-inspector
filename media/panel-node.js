@@ -23,14 +23,9 @@ function tipFold(key, label, count, body) {
   return `<details class="tipFold" data-fold="${key}"${open}><summary>${label}<small>${count}</small></summary>${body}</details>`
 }
 
-// Teste que decidiu o retorno: o último verdadeiro; sem nenhum, o código seguiu até o return final.
+// Teste que decidiu o retorno: o último verdadeiro.
 function decisiveCond(conds) {
   return [...conds].reverse().find((cond) => cond.result) || null
-}
-
-function tipVerdict(conds, decisive) {
-  if (!decisive) return 'nenhum teste foi verdadeiro: seguiu direto até o retorno acima'
-  return `${code(shorten(decisive.src, 60))} foi verdadeiro: levou ao retorno acima`
 }
 
 function tipConditions(node, step, returned) {
@@ -42,7 +37,10 @@ function tipConditions(node, step, returned) {
     const mark = cond === decisive ? ' decisive' : ''
     return `<div class="tipCond${mark}"><code>${highlightTerms(cond)}</code><span class="tipPill ${cond.result ? 'yes' : 'no'}">${verdict}</span></div>${operands.join('')}`
   })
-  if (returned) rows.push(`<div class="tipNote tipWhy">→ ${tipVerdict(conds, decisive)}</div>`)
+  if (returned && node.returnSrc)
+    rows.push(
+      `<div class="tipCond tipFinal">${returnCode(node)}<span class="tipPill yes">retornou</span></div>`,
+    )
   return rows.join('')
 }
 
@@ -67,11 +65,9 @@ function tipFinals(node, entryValues) {
   return tipFold('finals', 'Ao sair', `${rows.length} mudaram`, rows.join(''))
 }
 
-// "return picked" mostra de qual expressão veio o valor; literais e valores iguais ao texto não repetem.
+// O código do `return` (com o trecho devolvido) fica no fim de Testes; aqui só o valor.
 function tipReturn(node) {
-  const value = `<div class="tipResult">${highlight(prettyValue(node.value.f, 24))}</div>`
-  if (!node.returnSrc || node.returnSrc === node.value.f) return value
-  return `<div class="tipNote">${returnCode(node)}</div>${value}`
+  return `<div class="tipResult">${highlight(prettyValue(node.value.f, 24))}</div>`
 }
 
 function tipOutcome(node, stateName) {
@@ -98,7 +94,7 @@ function describeNode(node, step) {
     .map((variable) => tipRow(variable.name, variable.value))
   const conditions = condsAt(node, step)
   const folds = [
-    conditions.length
+    conditions.length || (returned && node.returnSrc)
       ? tipFold('conds', 'Testes', conditions.length, tipConditions(node, step, returned))
       : '',
     entry.length

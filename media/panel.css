@@ -1015,7 +1015,8 @@ code,
   border-left: 2px solid var(--done);
   background: color-mix(in srgb, var(--done) 8%, transparent);
 }
-.tipSection .tipWhy,
-.tipFold .tipWhy {
-  margin: 10px 0 0;
+.tipCond.tipFinal {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--border);
 }
